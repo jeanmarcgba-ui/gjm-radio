@@ -224,9 +224,19 @@ input[type=range]{flex:1;accent-color:var(--gold)}
 /* Emplacement publicitaire */
 .adslot{margin-top:14px;border:2px solid #fff;border-radius:16px;overflow:hidden;background:var(--navy-2);position:relative}
 .ad-label{position:absolute;top:8px;left:8px;z-index:2;background:rgba(4,10,22,.8);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border:1.5px solid #fff;border-radius:6px;padding:2px 7px}
-.ad-card{display:grid;text-decoration:none;color:inherit}
-.ad-card img{width:100%;max-width:100%;max-height:200px;object-fit:cover;display:block;background:#000}
-.ad-txt{padding:10px 14px 12px;display:grid;gap:2px}
+.ad-card{display:grid;grid-template-columns:132px minmax(0,1fr);gap:14px;align-items:center;padding:12px;color:inherit}
+@media (min-width:600px){.ad-card{grid-template-columns:168px minmax(0,1fr)}}
+.ad-media{position:relative;aspect-ratio:1/1;width:100%;max-width:100%;border:2px solid #fff;border-radius:12px;overflow:hidden;background:#000}
+.ad-media img,.ad-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.ad-snd{position:absolute;right:6px;bottom:6px;width:38px;height:38px;border-radius:50%;border:2px solid #fff;background:rgba(4,10,22,.75);color:#fff;display:grid;place-items:center;z-index:2}
+.ad-snd svg{width:20px;height:20px;fill:currentColor}
+.ad-tap{position:absolute;inset:0;display:grid;place-items:center;background:rgba(4,10,22,.55);color:#fff;font-weight:800;font-size:13px;text-align:center;padding:8px;border:none;z-index:1}
+.ad-eq{position:absolute;left:8px;bottom:8px;display:flex;gap:3px;align-items:flex-end;height:18px;z-index:1}
+.ad-eq i{width:4px;height:5px;background:var(--gold);border-radius:1px}
+.ad-media.on .ad-eq i{animation:eq .9s infinite ease-in-out}.ad-eq i:nth-child(2){animation-delay:.2s!important}.ad-eq i:nth-child(3){animation-delay:.4s!important}
+.ad-go{justify-self:start;margin-top:6px;background:var(--gold);color:var(--navy);border:2px solid #fff;border-radius:999px;padding:6px 14px;font-weight:800;font-size:13px;text-decoration:none}
+.ad-txt{display:grid;gap:3px;min-width:0}
+.ad-txt small{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .ad-txt b{font-size:15.5px}
 .ad-txt span{color:var(--muted);font-size:13px}
 .ad-dots{position:absolute;right:10px;top:10px;display:flex;gap:5px;z-index:2}
@@ -234,7 +244,8 @@ input[type=range]{flex:1;accent-color:var(--gold)}
 .ad-dots i.on{background:var(--gold)}
 .adm-nav{padding-bottom:10px;border-bottom:2px solid var(--line)}
 .adm-item{border:2px solid #fff;border-radius:14px;padding:12px;display:grid;gap:8px;background:var(--navy-2)}
-.adm-item img{max-width:100%;max-height:140px;object-fit:cover;border-radius:10px;border:1.5px solid #fff}
+.adm-item img,.adm-item video{max-width:100%;width:160px;aspect-ratio:1/1;object-fit:cover;border-radius:10px;border:1.5px solid #fff;background:#000}
+.adm-item audio{width:100%;max-width:320px}
 .adm-item.off{opacity:.55}
 .add input[type=file]{color:var(--ink)}
 /* Onglets : tous visibles (retour à la ligne), texte blanc et gras */
@@ -325,7 +336,6 @@ input[type=range]{flex:1;accent-color:var(--gold)}
   </section>
 
   <aside class="adslot" id="adSlot" hidden aria-label="Publicité">
-    <span class="ad-label">Publicité</span>
     <div class="ad-dots" id="adDots"></div>
     <div id="adBox"></div>
   </aside>
@@ -953,6 +963,7 @@ function setStatus(kind,txt){
   $('#play').setAttribute('aria-label',busy?'Pause':'Lecture');
   if(mode==='tv')$('#tvIdle').hidden=kind==='live';
   updateQBtn();
+  if(typeof applyAdSound==='function')applyAdSound();
 }
 function showNow(s){
   const c=cfg();
@@ -1185,13 +1196,27 @@ window.addEventListener('online',()=>toast('Connexion rétablie'));
 /* ---------- Démarrage ---------- */
 /* ================= Espace « Diffuser » ================= */
 const sess={get(k){try{return sessionStorage.getItem('gjmradio_'+k)}catch(e){return null}},set(k,v){try{v==null?sessionStorage.removeItem('gjmradio_'+k):sessionStorage.setItem('gjmradio_'+k,v)}catch(e){}}};
-let adminTok=sess.get('admin'),adminFilter='attente',adminRows=[],adminSec='demandes',adminInfos=[],adminPubs=[];
+try{sessionStorage.removeItem('gjmradio_admin')}catch(e){}   // la connexion admin n'est jamais gardée
+let adminTimer=null;
+let adminTok=null,adminFilter='attente',adminRows=[],adminSec='demandes',adminInfos=[],adminPubs=[];
 function openSheet(tab){
   $('#sheet').hidden=false;document.body.style.overflow='hidden';
   if(tab==='admin'||adminTok)$('#stAdminTab').hidden=false;
   sheetTab(tab||'prop');
 }
-function closeSheet(){$('#sheet').hidden=true;document.body.style.overflow=''}
+function adminLogout(msg){
+  if(!adminTok)return;
+  adminTok=null;clearTimeout(adminTimer);adminRows=[];adminInfos=[];adminPubs=[];
+  if(!$('#sheet').hidden&&!$('#stAdmin').hidden)renderAdmin();
+  if(msg)toast(msg);
+}
+// 15 minutes sans action dans l'administration : déconnexion
+function armAdminTimer(){clearTimeout(adminTimer);adminTimer=setTimeout(()=>adminLogout('Déconnecté après 15 minutes sans activité'),15*60e3)}
+$('#stAdmin').addEventListener('pointerdown',()=>{if(adminTok)armAdminTimer()},{capture:true});
+// quitter l'appli (ou la mettre en arrière-plan) déconnecte l'administrateur
+document.addEventListener('visibilitychange',()=>{if(document.hidden)adminLogout()});
+window.addEventListener('pagehide',()=>adminLogout());
+function closeSheet(){$('#sheet').hidden=true;document.body.style.overflow='';if(adminTok)adminLogout('Déconnecté de l\'administration');$('#stAdminTab').hidden=true}
 function sheetTab(t){
   document.querySelectorAll('#sheetTabs [data-st]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.st===t));
   $('#stProp').hidden=t!=='prop';$('#stStudio').hidden=t!=='studio';$('#stAdmin').hidden=t!=='admin';
@@ -1279,15 +1304,19 @@ function drawPubs(){
     <form class="add" id="pubForm"><p class="help">La pub s'affiche sous le lecteur, chez tous les utilisateurs. S'il y en a plusieurs, elles tournent toutes les 8 secondes.</p>
       <label>Titre<input id="adT" required maxlength="80" placeholder="Ex. MD Multiservice : pressing express"></label>
       <label>Texte court (facultatif)<input id="adX" maxlength="200" placeholder="Ex. -20 % cette semaine, Cocody Angré"></label>
-      <label>Image (photo ou affiche)<input id="adF" type="file" accept="image/*"></label>
-      <label>…ou lien d'une image déjà en ligne<input id="adU" type="url" placeholder="https://…/affiche.jpg"></label>
+      <label>Type de pub<select id="adK"><option value="image">Image (photo ou affiche)</option><option value="video">Vidéo (avec le son)</option><option value="audio">Audio (spot radio)</option></select></label>
+      <label><span id="adFL">Image</span><input id="adF" type="file" accept="image/*"></label>
+      <label><span id="adUL">…ou lien d'une image déjà en ligne</span><input id="adU" type="url" placeholder="https://…"></label>
+      <label id="adCW" hidden>Image de couverture du carré (facultatif)<input id="adC" type="file" accept="image/*"></label>
+      <p class="help" id="adH">L'image s'affiche dans un carré : une photo carrée rend mieux.</p>
       <label>Lien quand on touche la pub (facultatif)<input id="adL" placeholder="https://wa.me/2250700000000 ou https://site.com"></label>
       <div class="row2"><label>Fin de diffusion (facultatif)<input id="adE" type="date"></label>
         <label>Ordre d'affichage<input id="adO" type="number" value="0" min="0" max="99"></label></div>
       <button class="btn-gold" type="submit" id="adSend">Publier la pub</button></form>
     ${adminPubs.length?'':'<p class="help">Aucune publicité.</p>'}
     ${adminPubs.map(p=>{const exp=p.fin&&p.fin<today();return `<div class="adm-item${p.actif&&!exp?'':' off'}" data-pid="${esc(p.id)}">
-      <img src="${esc(p.image)}" alt=""><b>${esc(p.titre)}</b>${p.texte?`<div>${esc(p.texte)}</div>`:''}
+      ${p.media==='video'?`<video src="${esc(p.media_url)}" ${p.image?`poster="${esc(p.image)}"`:''} controls preload="metadata" playsinline></video>`:p.media==='audio'?`${p.image?`<img src="${esc(p.image)}" alt="">`:''}<audio src="${esc(p.media_url)}" controls preload="none"></audio>`:`<img src="${esc(p.image)}" alt="">`}
+      <b>${esc(p.titre)}</b> <span class="badge">${p.media==='video'?'Vidéo':p.media==='audio'?'Audio':'Image'}</span>${p.texte?`<div>${esc(p.texte)}</div>`:''}
       <div class="meta" style="color:var(--muted);font-size:13px;word-break:break-word">${exp?'Terminée':p.actif?'En ligne':'Masquée'}${p.fin?' · jusqu\'au '+fdate(p.fin):''} · ordre ${p.ordre}${p.lien?'<br>Lien : '+esc(p.lien):''}</div>
       <div class="btns"><button data-pa="toggle">${p.actif?'Masquer':'Afficher'}</button><button class="no" data-pa="del">Supprimer</button></div></div>`}).join('')}`;
 }
@@ -1330,12 +1359,24 @@ function shrink(file){
     img.src=u;
   });
 }
-async function uploadPub(file){
-  const blob=await shrink(file),path=`pub-${Date.now()}.jpg`;
+const MAX_MEDIA=20*1024*1024;
+async function uploadPub(file,kind){
+  let blob=file,ct=file.type,ext='jpg';
+  if(kind==='image'||!kind){blob=await shrink(file);ct='image/jpeg'}
+  else{
+    if(file.size>MAX_MEDIA)throw Object.assign(new Error(`Fichier trop lourd (${Math.round(file.size/1048576)} Mo). Maximum 20 Mo : raccourcissez ou compressez la ${kind==='video'?'vidéo':'piste audio'}.`),{status:0});
+    ext=(file.name.split('.').pop()||'').toLowerCase().replace(/[^a-z0-9]/g,'')||(kind==='video'?'mp4':'mp3');
+    if(!ct)ct=kind==='video'?'video/mp4':'audio/mpeg';
+    if(ct==='audio/x-m4a')ct='audio/mp4';
+  }
+  const path=`pub-${Date.now()}.${ext}`;
   let r;
-  try{r=await fetch(`${CFG.url}/storage/v1/object/pubs/${path}`,{method:'POST',headers:{apikey:CFG.key,Authorization:'Bearer '+adminTok,'Content-Type':'image/jpeg'},body:blob})}
+  try{r=await fetch(`${CFG.url}/storage/v1/object/pubs/${path}`,{method:'POST',headers:{apikey:CFG.key,Authorization:'Bearer '+adminTok,'Content-Type':ct},body:blob})}
   catch(e){throw Object.assign(new Error('Pas de connexion internet.'),{status:0})}
-  if(!r.ok){let m='';try{m=(await r.json()).message||''}catch(e){}throw Object.assign(new Error("Envoi de l'image impossible"+(m?' : '+m:'')),{status:r.status===400&&/jwt|token/i.test(m)?401:r.status})}
+  if(!r.ok){let m='';try{m=(await r.json()).message||''}catch(e){}
+    if(/mime|type/i.test(m))m='format non accepté (utilisez MP4 pour la vidéo, MP3 ou M4A pour l\'audio)';
+    if(/size|large|exceed/i.test(m))m='fichier trop lourd (20 Mo maximum)';
+    throw Object.assign(new Error("Envoi du fichier impossible"+(m?' : '+m:'')),{status:r.status===400&&/jwt|token/i.test(m)?401:r.status})}
   return `${CFG.url}/storage/v1/object/public/pubs/${path}`;
 }
 $('#stAdmin').addEventListener('submit',async e=>{
@@ -1347,18 +1388,32 @@ $('#stAdmin').addEventListener('submit',async e=>{
   if(e.target.id==='pubForm'){
     e.preventDefault();
     const b=$('#adSend');if(b.disabled)return;
-    const f=$('#adF').files[0],u=$('#adU').value.trim(),l=$('#adL').value.trim();
-    if(!f&&!/^https:\/\//i.test(u)){toast('Choisissez une image, ou collez le lien https d\'une image');return}
+    const kind=$('#adK').value,f=$('#adF').files[0],u=$('#adU').value.trim(),l=$('#adL').value.trim(),c=$('#adC').files[0];
+    if(!f&&!/^https:\/\//i.test(u)){toast(kind==='image'?'Choisissez une image, ou collez le lien https d\'une image':kind==='video'?'Choisissez une vidéo, ou collez son lien https':'Choisissez un fichier audio, ou collez son lien https');return}
+    if(f&&kind!=='image'&&!new RegExp('^'+kind+'/').test(f.type||kind+'/')){toast(kind==='video'?'Ce fichier n\'est pas une vidéo':'Ce fichier n\'est pas un fichier audio');return}
     if(l&&!/^(https:\/\/|tel:|mailto:)/i.test(l)){toast('Le lien doit commencer par https://');return}
-    b.disabled=true;b.textContent='Envoi…';
+    b.disabled=true;b.textContent=f&&kind!=='image'?`Envoi de la ${kind==='video'?'vidéo':'piste audio'}…`:'Envoi…';
     try{
-      const image=f?await uploadPub(f):u;
-      await sb('/rest/v1/pubs',{method:'POST',token:adminTok,prefer:'return=minimal',body:{titre:$('#adT').value.trim(),texte:$('#adX').value.trim()||null,
-        image,lien:l||null,fin:$('#adE').value||null,ordre:+$('#adO').value||0}});
+      const main=f?await uploadPub(f,kind):u;
+      const cover=kind!=='image'&&c?await uploadPub(c,'image'):null;
+      const body={titre:$('#adT').value.trim(),texte:$('#adX').value.trim()||null,lien:l||null,fin:$('#adE').value||null,ordre:+$('#adO').value||0,media:kind};
+      if(kind==='image'){body.image=main;body.media_url=null}else{body.media_url=main;body.image=cover}
+      await sb('/rest/v1/pubs',{method:'POST',token:adminTok,prefer:'return=minimal',body});
       toast('Publicité en ligne');await renderAdmin();loadBroadcast();
     }catch(err){admErr(err)}
     finally{b.disabled=false;b.textContent='Publier la pub'}
   }
+});
+$('#stAdmin').addEventListener('change',e=>{
+  if(e.target.id!=='adK')return;
+  const k=e.target.value;
+  $('#adF').accept=k==='image'?'image/*':k==='video'?'video/*':'audio/*';$('#adF').value='';
+  $('#adFL').textContent=k==='image'?'Image':k==='video'?'Vidéo (MP4, 20 Mo maximum, 15 à 60 secondes conseillé)':'Fichier audio (MP3 ou M4A, 20 Mo maximum)';
+  $('#adUL').textContent=k==='image'?"…ou lien d'une image déjà en ligne":k==='video'?"…ou lien https d'une vidéo MP4":"…ou lien https d'un fichier audio";
+  $('#adCW').hidden=k==='image';
+  $('#adH').textContent=k==='image'?"L'image s'affiche dans un carré : une photo carrée rend mieux."
+    :k==='video'?"La vidéo passe dans un carré, d'abord sans le son, puis avec le son dès que l'utilisateur touche l'écran. Il peut la couper avec le bouton haut-parleur. Le son est coupé automatiquement pendant l'écoute d'une radio ou d'une chaîne."
+    :"Le spot audio se joue avec l'image de couverture (ou le logo GJM Radio). Il démarre quand l'utilisateur a touché l'écran et ne joue pas pendant l'écoute d'une radio ou d'une chaîne.";
 });
 let delArmed2=null;
 $('#stAdmin').addEventListener('click',async e=>{
@@ -1382,7 +1437,7 @@ $('#stAdmin').addEventListener('submit',async e=>{
   if(e.target.id!=='admLogin')return;e.preventDefault();
   try{
     const r=await sb('/auth/v1/token?grant_type=password',{method:'POST',body:{email:$('#aMail').value.trim(),password:$('#aPass').value}});
-    adminTok=r.access_token;sess.set('admin',adminTok);$('#stAdminTab').hidden=false;toast('Connecté');renderAdmin();
+    adminTok=r.access_token;armAdminTimer();$('#stAdminTab').hidden=false;toast('Connecté');renderAdmin();
   }catch(err){toast(err.status===400?'E-mail ou mot de passe incorrect':err.message)}
 });
 let delArmed=null;
@@ -1391,7 +1446,7 @@ $('#stAdmin').addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b)return;
   const act=b.dataset.act;
   if(act==='refresh')return renderAdmin();
-  if(act==='logout'){adminTok=null;sess.set('admin',null);toast('Déconnecté');return renderAdmin()}
+  if(act==='logout'){adminLogout('Déconnecté');return renderAdmin()}
   const card=b.closest('.req'),id=card.dataset.id,row=adminRows.find(r=>r.id===id);
   const val=k=>{const i=card.querySelector(`[data-k="${k}"]`);return i?i.value.trim():undefined};
   const fields={};
@@ -1501,24 +1556,71 @@ function renderTicker(items){
   $('#tkMove').style.setProperty('--tk-d',Math.max(14,Math.round(chars*0.22))+'s');
   tk.hidden=false;
 }
+/* Son des pubs vidéo/audio : actif par défaut (sauf si l'utilisateur l'a coupé),
+   possible seulement après un premier toucher de l'écran (règle des navigateurs),
+   et coupé automatiquement pendant l'écoute d'une radio ou d'une chaîne. */
+let pubMuted=false;try{pubMuted=localStorage.getItem('gjmradio_pubMuted')==='1'}catch(e){}
+let touched=!!(navigator.userActivation&&navigator.userActivation.hasBeenActive);
+const SND_ON='<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8v8a4.5 4.5 0 002.5-4zM14 3.2v2.1a7 7 0 010 13.4v2.1a9 9 0 000-17.6z"/></svg>';
+const SND_OFF='<svg viewBox="0 0 24 24"><path d="M16.5 12A4.5 4.5 0 0014 8v2.2l2.5 2.5V12zM19 12a7 7 0 01-.6 2.8l1.5 1.5A9 9 0 0014 3.2v2.1A7 7 0 0119 12zM4.3 3L3 4.3 7.7 9H3v6h4l5 5v-6.7l4.3 4.3a7 7 0 01-2.3 1.2v2.1a9 9 0 003.7-1.8L19.7 21 21 19.7l-9-9L4.3 3zM12 4L9.9 6.1 12 8.2V4z"/></svg>';
+function adMediaEl(){return document.querySelector('#adBox video,#adBox audio')}
+function adSoundAllowed(){return touched&&!pubMuted&&!wantPlay}
+function applyAdSound(){
+  const m=adMediaEl();if(!m)return;
+  const p=pubsList[pubIdx],box=document.querySelector('#adBox .ad-media');
+  m.muted=!adSoundAllowed();
+  if(p&&p.media==='audio'){
+    // une pub audio ne joue qu'avec le son (inutile en muet)
+    if(adSoundAllowed())m.play().then(()=>box&&box.classList.add('on')).catch(()=>{});
+    else{m.pause();box&&box.classList.remove('on')}
+  }else m.play().catch(()=>{});
+  const tap=document.querySelector('#adBox .ad-tap');
+  if(tap)tap.hidden=!(p&&p.media==='audio'&&!adSoundAllowed()&&!wantPlay);
+  const b=document.querySelector('#adBox .ad-snd');
+  if(b){b.innerHTML=m.muted?SND_OFF:SND_ON;b.setAttribute('aria-label',m.muted?'Activer le son de la pub':'Couper le son de la pub')}
+}
+function nextPubLater(ms){clearTimeout(pubTimer);if(pubsList.length>1)pubTimer=setTimeout(()=>showPub(pubIdx+1),ms)}
 function showPub(k){
   if(!pubsList.length)return;
   pubIdx=(k+pubsList.length)%pubsList.length;
-  const p=pubsList[pubIdx],inner=`<img src="${esc(p.image)}" alt="${esc(p.titre)}" loading="lazy"><div class="ad-txt"><b>${esc(p.titre)}</b>${p.texte?`<span>${esc(p.texte)}</span>`:''}</div>`;
-  $('#adBox').innerHTML=p.lien?`<a class="ad-card" href="${esc(p.lien)}" target="_blank" rel="noopener sponsored">${inner}</a>`:`<div class="ad-card">${inner}</div>`;
+  const p=pubsList[pubIdx],media=p.media||'image',one=pubsList.length===1;
+  let sq;
+  if(media==='video')sq=`<video src="${esc(p.media_url)}" ${p.image?`poster="${esc(p.image)}"`:''} playsinline muted autoplay ${one?'loop':''} preload="metadata"></video><button class="ad-snd" type="button"></button>`;
+  else if(media==='audio')sq=`<img src="${esc(p.image||'logo.png')}" alt=""><audio src="${esc(p.media_url)}" preload="none" ${one?'loop':''}></audio><span class="ad-eq"><i></i><i></i><i></i></span><button class="ad-tap" type="button" hidden>Touchez pour écouter</button><button class="ad-snd" type="button"></button>`;
+  else sq=`<img src="${esc(p.image)}" alt="${esc(p.titre)}" loading="lazy">`;
+  $('#adBox').innerHTML=`<div class="ad-card"><div class="ad-media">${sq}</div><div class="ad-txt"><small>Publicité</small><b>${esc(p.titre)}</b>${p.texte?`<span>${esc(p.texte)}</span>`:''}${p.lien?`<a class="ad-go" href="${esc(p.lien)}" target="_blank" rel="noopener sponsored">${/wa\.me|whatsapp/i.test(p.lien)?'Contacter sur WhatsApp':/^tel:/i.test(p.lien)?'Appeler':'En savoir plus'}</a>`:''}</div></div>`;
   $('#adDots').innerHTML=pubsList.length>1?pubsList.map((_,i)=>`<i class="${i===pubIdx?'on':''}"></i>`).join(''):'';
+  const m=adMediaEl();
+  if(m){
+    m.addEventListener('ended',()=>showPub(pubIdx+1));
+    m.addEventListener('error',()=>nextPubLater(3000));
+    applyAdSound();
+    nextPubLater(90000);              // sécurité : une pub média ne reste pas plus de 90 s
+  }else nextPubLater(8000);
 }
 function renderPubs(items){
-  pubsList=items;clearInterval(pubTimer);
-  if(!items.length){$('#adSlot').hidden=true;return}
-  $('#adSlot').hidden=false;showPub(Math.min(pubIdx,items.length-1));
-  if(items.length>1)pubTimer=setInterval(()=>showPub(pubIdx+1),8000);
+  const same=JSON.stringify(items)===JSON.stringify(pubsList);
+  pubsList=items;
+  if(!items.length){clearTimeout(pubTimer);$('#adBox').innerHTML='';$('#adSlot').hidden=true;return}
+  $('#adSlot').hidden=false;
+  if(!same||!$('#adBox').innerHTML)showPub(Math.min(pubIdx,items.length-1));
 }
+$('#adBox').addEventListener('click',e=>{
+  if(e.target.closest('.ad-snd')){
+    const m=adMediaEl();if(!m)return;
+    pubMuted=!m.muted;try{localStorage.setItem('gjmradio_pubMuted',pubMuted?'1':'0')}catch(err){}
+    if(!pubMuted&&wantPlay){m.muted=false;m.play().catch(()=>{});const b=e.target.closest('.ad-snd');b.innerHTML=SND_ON;return} // choix explicite de l'utilisateur
+    applyAdSound();toast(pubMuted?'Son des pubs coupé':'Son des pubs activé');return;
+  }
+  if(e.target.closest('.ad-tap')){pubMuted=false;try{localStorage.setItem('gjmradio_pubMuted','0')}catch(err){}applyAdSound()}
+});
+// premier toucher de l'écran : les navigateurs autorisent alors le son
+['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>{if(!touched){touched=true;setTimeout(applyAdSound,0)}},{capture:true}));
 async function loadBroadcast(){
   await loadCfg();if(!sbReady())return;
   const [a,p]=await Promise.allSettled([
     sb('/rest/v1/annonces?select=texte&actif=eq.true&order=created_at.desc'),
-    sb('/rest/v1/pubs?select=id,titre,texte,image,lien&actif=eq.true&or=(fin.is.null,fin.gte.'+today()+')&order=ordre.asc,created_at.desc')]);
+    sb('/rest/v1/pubs?select=id,titre,texte,image,lien,media,media_url&actif=eq.true&or=(fin.is.null,fin.gte.'+today()+')&order=ordre.asc,created_at.desc')]);
   if(a.status==='fulfilled')renderTicker(a.value||[]);
   if(p.status==='fulfilled')renderPubs(p.value||[]);
 }

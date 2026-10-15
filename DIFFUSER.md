@@ -63,7 +63,7 @@ La clé « anon » peut être publique : la base ne laisse le public que **propo
 3. Il touche **Envoyer ma demande**.
 
 ### Ce que vous faites
-1. En bas de l'appli, touchez **Espace administrateur**, puis connectez-vous.
+1. En bas de l'appli, touchez **Espace administrateur**, puis connectez-vous. Pour votre sécurité, vous êtes déconnecté automatiquement quand vous fermez la fenêtre, quand vous quittez l'appli, ou après 15 minutes sans activité : l'appli redemande alors votre e-mail et votre mot de passe.
 2. L'onglet **En attente** liste les demandes, avec le nom et le téléphone du demandeur.
 3. **Tester le lien** lance la chaîne dans le lecteur pour vérifier qu'elle passe.
 4. **Valider** : la chaîne apparaît dans **Partenaires** pour tout le monde. Il faut un lien de lecture pour valider.
@@ -115,6 +115,19 @@ Mise en route, une seule fois : dans Supabase, **SQL Editor** → **New query**,
 3. L'info défile chez tous les utilisateurs dans les 5 minutes, ou dès qu'ils rouvrent l'appli.
 4. **Masquer** la retire sans l'effacer, **Afficher** la remet, **Supprimer** l'efface (touchez deux fois).
 5. Plusieurs infos actives défilent l'une après l'autre. Si aucune n'est active, la bande disparaît.
+
+### Pubs vidéo et audio
+Mise en route, une seule fois : dans Supabase, **SQL Editor** → **New query**, collez tout le fichier `supabase_pubs_media.sql`, puis **Run**.
+
+Dans **Publicités**, choisissez le **Type de pub** :
+- **Image** : une photo ou une affiche, de préférence carrée.
+- **Vidéo** : un fichier MP4 de 20 Mo au maximum (15 à 60 secondes conseillé). Elle passe dans le carré, sans le son au départ, puis avec le son dès que l'utilisateur touche l'écran.
+- **Audio** : un spot en MP3 ou M4A de 20 Mo au maximum, avec une image de couverture si vous le souhaitez (sinon, le logo GJM Radio s'affiche).
+
+Pour les utilisateurs :
+- Le bouton **haut-parleur** du carré coupe ou remet le son des pubs. L'appli s'en souvient.
+- Pendant l'écoute d'une radio ou d'une chaîne, le son des pubs est coupé automatiquement et les spots audio attendent.
+- Une pub vidéo ou audio passe jusqu'au bout, puis la pub suivante s'affiche.
 
 ### Publier une publicité (emplacement sous le lecteur)
 1. Ouvrez l'**Espace administrateur**, puis **Publicités**.
