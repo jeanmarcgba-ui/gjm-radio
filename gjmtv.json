@@ -1,0 +1,11 @@
+{
+  "aide": "Chaîne GJM TV 24h/24 : les vidéos passent l'une après l'autre, en boucle, à la même heure pour tout le monde. fichier = nom d'un fichier du dossier tv/ ou lien https d'une vidéo MP4. duree = durée de la vidéo (ex. 12:30 ou 1:05:00), facultative : l'appli la mesure toute seule si elle manque. actif false = vidéo mise de côté.",
+  "actif": true,
+  "nom": "GJM TV",
+  "logo": "logo.png",
+  "description": "La chaîne de GJM Tecnologie · 24h/24",
+  "videos": [
+    { "titre": "Bienvenue sur GJM TV", "fichier": "tv/bienvenue.mp4", "duree": "0:30" },
+    { "titre": "Annonce GJM TV", "fichier": "tv/annonce.mp4", "duree": "0:20", "info": "Annoncez sur GJM TV" }
+  ]
+}

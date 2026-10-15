@@ -633,6 +633,83 @@ async function partnersFor(m){
     ?{id:'p-'+r.id,name:r.nom,urls:[r.lien],favicon:r.logo||'',q:'',part:false,country:r.categorie||'Partenaire GJM',partner:true}
     :{id:'p-'+r.id,name:r.nom,url:r.lien,favicon:r.logo||'',tags:r.categorie||'Partenaire GJM',country:'',bitrate:0,hls:/\.m3u8/i.test(r.lien),partner:true});
 }
+/* ---------- GJM TV : chaîne 24h/24 faite de vidéos (fichier gjmtv.json) ----------
+   Les vidéos passent en boucle, calées sur l'horloge : tout le monde voit la même chose au même moment. */
+const VT0=Date.UTC(2026,0,1);
+let VCH=null,vReady=null,vIdx=-1,vErrs=0,vTok=0;
+const durSec=d=>{if(d==null||d==='')return 0;if(typeof d==='number')return d;const p=String(d).trim().split(':').map(Number);if(p.some(isNaN))return 0;return p.reduce((a,b)=>a*60+b,0)};
+const vAbs=f=>{try{return new URL(f,location.href).href}catch(e){return f}};
+function measure(url){return new Promise(res=>{
+  const v=document.createElement('video');v.preload='metadata';v.muted=true;
+  const done=d=>{clearTimeout(t);v.onloadedmetadata=v.onerror=null;v.removeAttribute('src');v.load();res(d)};
+  const t=setTimeout(()=>done(0),15000);
+  v.onloadedmetadata=()=>done(isFinite(v.duration)?v.duration:0);v.onerror=()=>done(0);v.src=url;
+})}
+function loadGjmTv(){
+  if(!vReady)vReady=(async()=>{
+    try{
+      const r=await fetch('gjmtv.json',{cache:'no-cache'});if(!r.ok)return null;
+      const j=await r.json();if(j.actif===false)return null;
+      const durs=store.get('vdur',{}),vids=[];
+      for(const v of (j.videos||[])){
+        if(!v||v.actif===false||!v.fichier)continue;
+        const url=vAbs(v.fichier);let d=Math.round(durSec(v.duree));
+        if(!d){d=durs[url]||Math.round(await measure(url));if(d)durs[url]=d}
+        if(d>0)vids.push({titre:v.titre||'GJM TV',info:v.info||'',url,d});
+      }
+      store.set('vdur',durs);
+      if(!vids.length)return null;
+      return VCH={nom:j.nom||'GJM TV',logo:j.logo?vAbs(j.logo):'',desc:j.description||'Chaîne GJM · 24h/24',vids,total:vids.reduce((a,v)=>a+v.d,0)};
+    }catch(e){return null}
+  })();
+  return vReady;
+}
+// Où en est la boucle à l'instant t (ms) : vidéo n° i, s secondes après son début
+function vAt(t){
+  const T=VCH.total,e=(((t-VT0)/1000)%T+T)%T;let acc=0;
+  for(let i=0;i<VCH.vids.length;i++){const d=VCH.vids[i].d;if(e<acc+d)return {i,s:e-acc,start:t-(e-acc)*1000};acc+=d}
+  return {i:0,s:0,start:t};
+}
+const vChannel=()=>({id:'gjmtv',name:VCH.nom,urls:[],favicon:VCH.logo,q:'',part:false,country:VCH.desc,vchan:true});
+async function withGjmTv(l){if(mode!=='tv')return l;await loadGjmTv();return VCH?[vChannel(),...l.filter(x=>!x.vchan)]:l}
+const utcHM=ms=>{const d=new Date(ms);return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0')};
+function vNowNext(){
+  if(!VCH)return null;
+  const p=vAt(Date.now()),n=VCH.vids.length,v=VCH.vids[p.i],nx=VCH.vids[(p.i+1)%n];
+  return {cur:{titre:v.titre,info:v.info},next:n>1||v.d>60?{titre:nx.titre,debut:utcHM(p.start+v.d*1000)}:null};
+}
+// Grille d'une journée (pour le panneau Programme), heures GMT comme programme.json
+function vSlots(d){
+  if(!VCH)return null;
+  const now=new Date(),k=(d-now.getUTCDay()+7)%7;
+  const day0=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())+k*864e5,day1=day0+864e5;
+  let p=vAt(k===0?Math.max(day0,Date.now()-3600e3):day0),t=p.start;const out=[];   // aujourd'hui : à partir d'1 h avant maintenant
+  for(let i=p.i;t<day1&&out.length<400;i=(i+1)%VCH.vids.length){
+    const v=VCH.vids[i],e=t+v.d*1000;
+    out.push({titre:v.titre,info:v.info,debut:utcHM(t),a:(t-day0)/60000,b:(e-day0)/60000});t=e;
+  }
+  return out;
+}
+async function vPlay(forceIdx){
+  if(!VCH){setStatus('load','Préparation de GJM TV…');await loadGjmTv();
+    if(!current||!current.vchan||!wantPlay)return;if(!VCH){fail();return}}
+  const m=video,n=VCH.vids.length;
+  let p=forceIdx!=null?{i:((forceIdx%n)+n)%n,s:0}:vAt(Date.now());
+  const v=VCH.vids[p.i];vIdx=p.i;const tok=++vTok;
+  const seek=()=>{m.removeEventListener('loadedmetadata',seek);
+    if(tok!==vTok||!current||!current.vchan)return;
+    if(forceIdx==null){const q=vAt(Date.now());if(q.i===p.i)p=q}
+    if(p.s>1)try{m.currentTime=Math.min(p.s,(m.duration||v.d)-0.5)}catch(e){}};
+  m.addEventListener('loadedmetadata',seek);
+  m.src=v.url;
+  m.play().catch(err=>{if(err.name!=='AbortError'&&err.name!=='NotAllowedError')nextUrl()});
+  updateProgNow();
+}
+video.addEventListener('ended',()=>{
+  if(!wantPlay||!current||!current.vchan||playMode!=='tv'||!VCH)return;
+  const q=vAt(Date.now());
+  vPlay(q.i===vIdx?vIdx+1:undefined);   // vidéo un peu plus courte que prévu : on passe à la suivante
+});
 function partnerEmpty(){
   return sbReady()?"Aucune chaîne partenaire pour le moment. Touchez « Diffuser » en haut pour proposer la vôtre."
     :"L'espace partenaires n'est pas encore activé.";
@@ -670,7 +747,12 @@ async function load(t){
   if(t==='fav')return s.favs;
   if(t==='recent')return s.recents;
   if(t==='mine')return s.mine;
-  if(t==='partenaires'){try{return await partnersFor(mode)}catch(e){if(e.status===0&&!sbReady())return [];throw e}}
+  if(t==='partenaires'){
+    let l;
+    try{l=await partnersFor(mode)}
+    catch(e){if(e.status===0&&!sbReady())l=[];else{await loadGjmTv();if(mode==='tv'&&VCH)return [vChannel()];throw e}}
+    return withGjmTv(l);
+  }
   if(cache[mode][t])return cache[mode][t];
   return cache[mode][t]=await (mode==='tv'?loadTv(t):loadRadio(t));
 }
@@ -906,11 +988,13 @@ function gridOf(s,m){
   return null;
 }
 function slots(s,d,m){
+  if(s&&s.vchan)return vSlots(d);
   const g=gridOf(s,m);if(!g)return null;
   return g.filter(x=>dayMatch(x.jours,d)).map(x=>{const a=toMin(x.debut);let b=x.fin?toMin(x.fin):a+30;if(b<=a)b+=1440;return {...x,a,b}}).sort((x,y)=>x.a-y.a);
 }
 function clock(){const n=new Date();return {d:n.getUTCDay(),m:n.getUTCHours()*60+n.getUTCMinutes()}}
 function nowNext(s,m){
+  if(s&&s.vchan)return vNowNext();
   const {d,m:t}=clock(),today=slots(s,d,m);if(!today)return null;
   const yest=(slots(s,(d+6)%7,m)||[]).filter(x=>x.b>1440&&t<x.b-1440);
   const cur=yest[0]||today.find(x=>x.a<=t&&t<x.b)||null;
@@ -936,7 +1020,7 @@ function renderProg(){
   const l=s?slots(s,progDay):null,ul=$('#progList');
   if(!s){ul.innerHTML=`<li class="prog-empty">Choisissez d'abord une ${cfg().one}.</li>`;return}
   if(!l||!l.length){ul.innerHTML=`<li class="prog-empty">${l?'Pas de programme ce jour-là pour '+esc(s.name)+'.':'Programme non disponible pour '+esc(s.name)+'.'}</li>`;return}
-  const fmt=x=>{const f=x.b%1440;return hhmm(x)+'–'+String(Math.floor(f/60)).padStart(2,'0')+':'+String(f%60).padStart(2,'0')};
+  const fmt=x=>{const f=Math.floor(x.b)%1440;return hhmm(x)+'–'+String(Math.floor(f/60)).padStart(2,'0')+':'+String(f%60).padStart(2,'0')};
   ul.innerHTML=l.map(x=>{const on=progDay===d&&x.a<=t&&t<x.b,past=progDay===d&&x.b<=t;
     return `<li class="${on?'on':past?'past':''}"><time>${fmt(x)}</time><span class="t">${esc(x.titre)}${x.info?`<small>${esc(x.info)}</small>`:''}</span></li>`}).join('');
 }
@@ -1072,7 +1156,8 @@ async function doSearch(q){
     if(m==='radio')res=cleanRadio(await api(`/json/stations/search?name=${encodeURIComponent(q)}&${Q}&limit=80`));
     else{
       const parts=await Promise.allSettled(['tnt','ci','afrique','france','sport','doc','series','films','partenaires'].map(t=>t==='partenaires'?partnersFor('tv'):cache.tv[t]?Promise.resolve(cache.tv[t]):loadTv(t).then(l=>cache.tv[t]=l)));
-      const all=[...parts.flatMap(p=>p.status==='fulfilled'?p.value:[]),...D.tv.mine];
+      await loadGjmTv();
+      const all=[...(VCH?[vChannel()]:[]),...parts.flatMap(p=>p.status==='fulfilled'?p.value:[]),...D.tv.mine];
       const n=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
       const seen=new Set();res=all.filter(s=>n(s.name).includes(n(q))&&!seen.has(s.id)&&seen.add(s.id));
     }
@@ -1115,6 +1200,7 @@ function stopEngine(){
 }
 function fixUrl(u){return location.protocol==='https:'&&u.startsWith('http:')?'https:'+u.slice(5):u}
 function startUrl(){
+  if(current.vchan){vPlay();return}
   const s=current,m=media(),urls=s.urls||[s.url];
   const url=fixUrl(urls[attempt]);
   const isHls=/\.m3u8/i.test(url)||s.hls;
@@ -1138,6 +1224,11 @@ function startUrl(){
 }
 function nextUrl(){
   if(!wantPlay||!current)return;
+  if(current.vchan){                       // GJM TV : vidéo illisible, on passe à la suivante
+    everPlayed=false;retries=0;
+    if(VCH&&++vErrs<VCH.vids.length){setStatus('load','Vidéo suivante…');vPlay(vIdx+1)}else{vErrs=0;fail()}
+    return;
+  }
   if(playMode==='tv'&&current.urls)hSet(current.urls[attempt],false);
   everPlayed=false;retries=0;
   const n=(current.urls||[current.url]).length;
@@ -1153,7 +1244,7 @@ function offlineCard(s,afterFail){
 function playStation(s){
   stopEngine();
   if(mode==='tv')resetIdle();
-  if(mode==='tv'&&s.urls&&!s.urls.length){
+  if(mode==='tv'&&s.urls&&!s.urls.length&&!s.vchan){
     // chaîne sans flux public : on affiche le lien officiel ou l'explication
     current=s;playMode=mode;wantPlay=false;
     const S=st();S.last=s;save('last');
@@ -1175,7 +1266,7 @@ function fail(){
   if(!wantPlay)return;wantPlay=false;stopEngine();
   setStatus('err','Indisponible');
   if(playMode==='tv'&&current&&current.link){offlineCard(current,true);return}
-  if(playMode==='tv'&&current&&current.urls&&!['fav','recent','mine'].includes(st().tab)&&!$('#q').value){
+  if(playMode==='tv'&&current&&current.urls&&!current.vchan&&!['fav','recent','mine'].includes(st().tab)&&!$('#q').value){
     // chaîne en panne : retirée de la liste affichée
     const id=current.id;list=list.filter(x=>x.id!==id);render();
     toast('Cette chaîne est hors service : elle a été retirée de la liste.');return;
@@ -1194,11 +1285,12 @@ function step(d){
   i=(i+d+list.length)%list.length;playStation(list[i]);
 }
 for(const m of [audio,video]){
-  m.addEventListener('playing',()=>{if(m!==media())return;setStatus('live','En direct');everPlayed=true;retries=0;
+  m.addEventListener('playing',()=>{if(m!==media())return;setStatus('live','En direct');everPlayed=true;retries=0;vErrs=0;
     if(playMode==='tv'&&current&&current.urls&&current.urls[attempt])hSet(current.urls[attempt],true)});
   m.addEventListener('waiting',()=>{if(wantPlay&&m===media())setStatus('load','Chargement…')});
   m.addEventListener('error',()=>{
     if(!m.getAttribute('src')||m!==media())return;
+    if(current&&current.vchan&&everPlayed&&retries<3&&wantPlay){retries++;setStatus('load','Reconnexion…');setTimeout(()=>{if(wantPlay&&current&&current.vchan)vPlay()},2500);return}
     if(everPlayed&&retries<3&&wantPlay){retries++;setStatus('load','Reconnexion…');setTimeout(()=>{if(wantPlay){m.load();m.play().catch(()=>{})}},2500);return}
     nextUrl();
   });
