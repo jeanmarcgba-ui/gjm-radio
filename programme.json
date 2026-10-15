@@ -1,0 +1,10 @@
+{
+  "aide": "Heures d'Abidjan (GMT), format 20:00. jours : tous, lun-ven, sam-dim, ou une liste comme lun,mer,ven. Le nom de la chaine doit etre ecrit comme dans l'appli (majuscules et accents sans importance).",
+  "tele": {
+    "RTI 1": [
+      { "jours": "tous", "debut": "13:00", "fin": "13:30", "titre": "Journal de 13h" },
+      { "jours": "tous", "debut": "20:00", "fin": "20:45", "titre": "Journal de 20h" }
+    ]
+  },
+  "radio": {}
+}

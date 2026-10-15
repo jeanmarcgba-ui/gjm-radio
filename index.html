@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GJM Radio</title>
+<meta name="description" content="GJM Radio — radios FM et chaînes de télé de Côte d'Ivoire, d'Afrique et du monde en direct.">
+<meta name="theme-color" content="#0b1a33">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Mise en page : un poste de radio — cadran FM doré en tête, commandes, puis la liste des stations */
+:root{
+  --navy:#0b1a33; --navy-2:#122647; --navy-3:#1a3360; --line:#26406e;
+  --gold:#e3b341; --gold-soft:#f1d58a; --ink:#eef2fa; --muted:#93a3c2;
+  --danger:#ff7a6b;
+  --f-display:"Unbounded","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"Figtree","Segoe UI",Roboto,system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--navy);color:var(--ink)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.wrap{max-width:760px;margin:0 auto;padding-block:12px 120px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* En-tête */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:6px 14px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{width:44px;height:44px;border-radius:11px}
+.brand h1{font-family:var(--f-display);font-size:18px;font-weight:700;margin:0;letter-spacing:.02em}
+.brand h1 span{color:var(--gold)}
+.brand small{display:block;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.btn-ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:600}
+.btn-ghost:hover{border-color:var(--gold)}
+
+/* Poste / lecteur */
+.set{background:linear-gradient(180deg,var(--navy-2),var(--navy));border:1px solid var(--line);border-radius:20px;padding:18px 16px 16px;display:grid;gap:16px}
+.dial{position:relative;height:64px;border-radius:12px;background:#07122a;border:1px solid var(--line);overflow:hidden}
+.scale{position:absolute;inset:0;display:flex;justify-content:space-between;padding:0 14px;align-items:flex-end}
+.tick{width:1px;background:var(--muted);opacity:.45;height:10px}
+.tick.big{height:20px;opacity:.85;position:relative}
+.tick.big::after{content:attr(data-f);position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-family:var(--f-mono);font-size:10px;color:var(--muted)}
+.needle{position:absolute;top:6px;bottom:6px;width:3px;margin-left:-1.5px;background:var(--gold);border-radius:2px;box-shadow:0 0 12px var(--gold);left:50%;transition:left .8s cubic-bezier(.3,1.3,.5,1)}
+.band{position:absolute;top:6px;left:14px;font-family:var(--f-mono);font-size:10px;color:var(--gold);letter-spacing:.1em}
+.freq{position:absolute;top:5px;right:14px;font-family:var(--f-mono);font-size:12px;color:var(--gold-soft)}
+
+.now{display:flex;gap:14px;align-items:center;min-width:0}
+.logo{width:64px;height:64px;flex:none;border-radius:14px;background:var(--navy-3);display:grid;place-items:center;overflow:hidden;font-family:var(--f-display);font-weight:700;color:var(--gold);font-size:20px}
+.logo img{width:100%;height:100%;object-fit:cover;background:#fff}
+.now-text{min-width:0;flex:1}
+.now-name{font-family:var(--f-display);font-size:17px;font-weight:600;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-wrap:balance}
+.now-meta{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-top:4px;color:var(--muted)}
+.status.live{color:var(--gold)}
+.status.err{color:var(--danger)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.status.live .dot{animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.eq{display:flex;gap:2px;align-items:flex-end;height:14px}
+.eq i{width:3px;background:var(--gold);height:4px;border-radius:1px}
+.playing .eq i{animation:eq .9s infinite ease-in-out}
+.eq i:nth-child(2){animation-delay:.2s!important}.eq i:nth-child(3){animation-delay:.4s!important}.eq i:nth-child(4){animation-delay:.1s!important}
+@keyframes eq{50%{height:14px}}
+
+.controls{display:flex;align-items:center;justify-content:center;gap:14px}
+.ic{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--navy-2);display:grid;place-items:center}
+.ic:hover{border-color:var(--gold)}
+.ic svg{width:20px;height:20px;fill:currentColor}
+.play{width:68px;height:68px;border:none;background:var(--gold);color:var(--navy)}
+.play svg{width:28px;height:28px}
+.ic.on{color:var(--gold);border-color:var(--gold)}
+.extra{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.vol{display:flex;align-items:center;gap:8px;flex:1;min-width:160px}
+.vol svg{width:18px;height:18px;fill:var(--muted);flex:none}
+input[type=range]{flex:1;accent-color:var(--gold)}
+.chip{border:1px solid var(--line);background:none;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+.chip.on{border-color:var(--gold);color:var(--gold)}
+
+/* Navigation */
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:20px 0 12px;padding-bottom:4px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;border:none;background:var(--navy-2);border-radius:999px;padding:8px 14px;font-weight:600;font-size:14px;color:var(--muted)}
+.tab[aria-selected=true]{background:var(--gold);color:var(--navy)}
+.search{display:flex;gap:8px;margin-bottom:10px}
+.search input{flex:1;min-width:0;background:var(--navy-2);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
+.search input::placeholder{color:var(--muted)}
+#listCount{white-space:nowrap;font-variant-numeric:tabular-nums}
+.list-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:6px 2px 8px}
+
+/* Liste des stations */
+.list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.st{display:flex;align-items:center;gap:12px;padding:9px 8px;border-radius:12px;min-width:0}
+.st:hover{background:var(--navy-2)}
+.st.cur{background:var(--navy-3)}
+.st .logo{width:44px;height:44px;border-radius:10px;font-size:14px}
+.st-main{flex:1;min-width:0;background:none;border:none;text-align:left;padding:0;display:flex;align-items:center;gap:12px}
+.st-txt{min-width:0}
+.st-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-sub{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-fm{font-family:var(--f-mono);color:var(--gold);font-size:12px}
+.star{background:none;border:none;width:38px;height:38px;display:grid;place-items:center;flex:none;color:var(--muted)}
+.star svg{width:20px;height:20px}
+.star.on{color:var(--gold)}
+.empty{color:var(--muted);text-align:center;padding:36px 12px;line-height:1.6}
+.skel{height:58px;border-radius:12px;background:linear-gradient(90deg,var(--navy-2),var(--navy-3),var(--navy-2));background-size:200% 100%;animation:sk 1.2s infinite}
+@keyframes sk{to{background-position:-200% 0}}
+
+/* Formulaire ajout */
+.add{background:var(--navy-2);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;margin-bottom:12px}
+.add label{font-size:12px;color:var(--muted);display:grid;gap:4px}
+.add input{background:var(--navy);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.btn-gold{background:var(--gold);color:var(--navy);border:none;border-radius:10px;padding:11px;font-weight:700}
+.del{background:none;border:none;color:var(--danger);font-size:12px;font-weight:600;padding:8px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--gold);color:var(--navy);font-weight:600;padding:10px 16px;border-radius:12px;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:9}
+.foot{color:var(--muted);font-size:12px;text-align:center;margin-top:28px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Sélecteur Radio / Télé */
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--navy-2);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:14px}
+.mode button{border:none;background:none;border-radius:10px;padding:10px;font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--muted);display:flex;gap:8px;justify-content:center;align-items:center}
+.mode button svg{width:18px;height:18px;fill:currentColor}
+.mode button[aria-pressed=true]{background:var(--gold);color:var(--navy)}
+/* Écran télé */
+.tvscreen{position:relative;aspect-ratio:16/9;width:100%;max-width:100%;background:#000;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.tvscreen video{width:100%;height:100%;display:block;background:#000;object-fit:contain}
+.tvscreen .idle{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);font-size:13px;padding:16px;background:radial-gradient(circle at 50% 40%,var(--navy-3),#000 75%)}
+.tvscreen .idle img{width:64px;height:64px;border-radius:14px;display:block;margin:0 auto 8px}
+.set>*{min-width:0}
+.controls{flex-wrap:wrap}
+@media (max-width:460px){.controls{gap:8px}.ic{width:42px;height:42px}.ic svg{width:18px;height:18px}.play{width:58px;height:58px}.play svg{width:26px;height:26px}}
+@media (max-width:380px){.controls{gap:6px}.ic{width:40px;height:40px}.play{width:54px;height:54px}.set{padding-inline:12px}}
+.prog-now{font-size:12.5px;color:var(--gold-soft);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog-now b{color:var(--gold);font-weight:600}
+.prog{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:10px}
+.prog-days{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.prog-days::-webkit-scrollbar{display:none}
+.prog-days button{flex:none;border:1px solid var(--line);background:none;border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.prog-days button[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.prog-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.prog-list li{display:grid;grid-template-columns:92px 1fr;gap:10px;padding:8px 10px;border-radius:10px;align-items:baseline}
+.prog-list li.on{background:var(--navy-3)}
+.prog-list li.past{opacity:.5}
+.prog-list time{font-family:var(--f-mono);font-size:12px;color:var(--gold);font-variant-numeric:tabular-nums}
+.prog-list .t{min-width:0;font-weight:600}
+.prog-list .t small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.prog-empty{color:var(--muted);font-size:13px;padding:6px 2px}
+.st-now{color:var(--gold-soft)}
+.tvscreen .idle .btn-gold{display:inline-block;margin-top:12px;text-decoration:none;padding:10px 16px;font-size:14px}
+.tvscreen .idle p{margin:6px auto 0;max-width:34ch;line-height:1.45}
+.tvscreen .idle strong{color:var(--ink);font-size:15px}
+.lock{display:grid;gap:10px;max-width:330px;margin:0 auto;text-align:left;color:var(--ink)}
+.lock p{margin:0;color:var(--muted);line-height:1.5}
+.lock input[type=password]{background:var(--navy);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-family:var(--f-mono);letter-spacing:.4em;font-size:18px;min-width:0}
+.lock label{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--muted)}
+.lock .linkbtn{background:none;border:none;color:var(--muted);text-decoration:underline;font-size:12.5px;padding:4px;justify-self:start}
+.lock .linkbtn.danger{color:var(--danger)}
+.adult-bar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.qmenu{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:8px}
+.qmenu p{margin:0;color:var(--muted);font-size:12.5px}
+.qopts{display:flex;flex-wrap:wrap;gap:6px}
+.qopts button{border:1px solid var(--line);background:none;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;color:var(--ink)}
+.qopts button[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.tvscreen:fullscreen{border:none;border-radius:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <img src="logo.png" alt="Logo GJM Radio">
+      <div><h1>GJM <span>Radio</span></h1><small id="subtitle">Radio &amp; Télé en direct · GJM Tecnologie</small></div>
+    </div>
+    <button class="btn-ghost" id="installBtn" hidden>Installer l'appli</button>
+  </header>
+
+  <div class="mode" role="group" aria-label="Choisir Radio ou Télé">
+    <button id="modeRadio" data-mode="radio" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M3.2 6.3L17 1l.7 1.9L8.6 6.3H20a1 1 0 011 1V21a1 1 0 01-1 1H4a1 1 0 01-1-1V7.3c0-.4.1-.7.2-1zM8 18a3 3 0 100-6 3 3 0 000 6zm7-8v2h4v-2h-4zm0 4v2h4v-2h-4z"/></svg>Radio</button>
+    <button id="modeTv" data-mode="tv" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M21 6h-7.6l3.3-3.3-.7-.7L12 6 8 2l-.7.7L10.6 6H3a2 2 0 00-2 2v11a2 2 0 002 2h18a2 2 0 002-2V8a2 2 0 00-2-2zm0 13H3V8h18v11z"/></svg>Télé</button>
+  </div>
+
+  <section class="set" id="set" aria-label="Lecteur">
+    <div class="dial" id="dial" aria-hidden="true">
+      <span class="band">FM</span><span class="freq" id="freq">MHz</span>
+      <div class="scale" id="scale"></div>
+      <div class="needle" id="needle"></div>
+    </div>
+    <div class="tvscreen" id="tvScreen" hidden>
+      <video id="video" playsinline preload="none"></video>
+      <div class="idle" id="tvIdle"><div><img src="logo.png" alt=""><div>Choisissez une chaîne dans la liste</div></div></div>
+    </div>
+    <div class="now">
+      <div class="logo" id="nowLogo"><img src="logo.png" alt=""></div>
+      <div class="now-text">
+        <p class="now-name" id="nowName">Choisissez une station</p>
+        <div class="now-meta" id="nowMeta">Touchez une radio dans la liste pour l'écouter</div>
+        <div class="prog-now" id="progNow" hidden></div>
+        <div class="status" id="status"><span class="eq"><i></i><i></i><i></i><i></i></span><span id="statusTxt">Prêt</span></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="ic" id="favNow" aria-label="Ajouter aux favoris"><svg viewBox="0 0 24 24"><path d="M12 17.3l-6.2 3.7 1.7-7L2 9.2l7.1-.6L12 2l2.9 6.6 7.1.6-5.5 4.8 1.7 7z"/></svg></button>
+      <button class="ic" id="prev" aria-label="Précédente"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6L18 18V6z"/></svg></button>
+      <button class="ic play" id="play" aria-label="Lecture"><svg viewBox="0 0 24 24" id="playIcon"><path d="M8 5v14l11-7z"/></svg></button>
+      <button class="ic" id="next" aria-label="Suivante"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+      <button class="ic" id="sleep" aria-label="Minuterie d'arrêt"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7z"/></svg></button>
+      <button class="ic" id="fs" aria-label="Plein écran" hidden><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+    </div>
+    <div class="extra">
+      <div class="vol"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8v8a4.5 4.5 0 002.5-4z"/></svg>
+        <input type="range" id="vol" min="0" max="100" value="80" aria-label="Volume"></div>
+      <span class="chip" id="sleepTxt" hidden></span>
+      <button class="chip" id="qBtn" aria-expanded="false" hidden>Qualité : Auto</button>
+      <button class="chip" id="progBtn" aria-expanded="false">Programme</button>
+    </div>
+    <div class="qmenu" id="qMenu" hidden></div>
+    <div class="prog" id="progPanel" hidden>
+      <div class="prog-days" id="progDays"></div>
+      <ul class="prog-list" id="progList"></ul>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+
+  <div class="search">
+    <input type="search" id="q" autocomplete="off">
+  </div>
+
+  <form class="add" id="addForm" hidden>
+    <label><span id="addNameLbl">Nom de la radio</span><input id="addName" required></label>
+    <label><span id="addUrlLbl">Adresse du flux (lien https du stream)</span><input id="addUrl" type="url" required></label>
+    <label id="addFmWrap">Fréquence FM (facultatif)<input id="addFm" inputmode="decimal" placeholder="Ex. 98.3"></label>
+    <button class="btn-gold" type="submit" id="addBtn">Ajouter la radio</button>
+  </form>
+
+  <div class="adult-bar" id="adultBar" hidden>
+    <button class="chip" id="adultAll" type="button">Afficher aussi les liens en panne</button>
+    <button class="chip" id="adultLock" type="button">Verrouiller</button>
+  </div>
+  <div class="list-head"><span id="listTitle">Stations</span><span id="listCount"></span></div>
+  <ul class="list" id="list"></ul>
+
+  <p class="foot" id="foot"></p>
+</div>
+<div class="toast" id="toast" hidden></div>
+<audio id="audio" preload="none"></audio>
+
+<script type="application/json" id="langData">{"00sreplay.us@sd":"e","13e.cl@sd":"x","13realities.cl@sd":"x","13t.cl@sd":"x","13ulica.pl@sd":"x","16annieincinta.de@it":"x","1kzntv.za@sd":"e","20.it@sd":"x","247boxtv.ir@sd":"x","24hourfreemovies.us@sd":"e","2900happiness.se@dk":"e","2x2.ru@sd":"x","30ageorgiahollywoodreview.us@sd":"e","30agolfkingdom.us@sd":"e","30aloomeredtv.us@sd":"e","30asidewalks.us@sd":"e","30atelevisionchannel.us@sd":"e","30atvclassicmovies.us@sd":"e","312kino.kg@sd":"x","312tv.kg@sd":"x","365daystv.ru@sd":"x","3catplatsbruts.es@sd":"x","48hours.us@ca":"e","48hours.us@us":"e","4evercinema.ua@sd":"x","4everdrama.ua@sd":"x","4evertheater.ua@sd":"x","4utv.tr@sd":"x","50centaction.us@sd":"e","5aabtv.ca@sd":"x","5cops.us@uk":"e","5minuttishiny.ru@sd":"x","5plus.il@sd":"x","5plus.mm@sd":"x","5stars.il@sd":"x","5usa.uk@sd":"e","6ter.fr@sd":"f","70scinema.us@sd":"e","78tv.bg@sd":"x","7gold.it@sd":"x","7thheaven.se@dk":"e","7thheaven.se@no":"e","7thheaven.se@se":"e","80srewind.us@sd":"e","8tv.my@sd":"x","90210.de@dach":"x","90sthrowback.us@sd":"e","9gem.au@sydney":"e","9go.au@sydney":"e","a2.ru@sd":"x","aajentertainment.pk@sd":"x","aakaashaath.in@sd":"x","aamarbangla.in@sd":"x","aathavantv.uk@sd":"x","ab1.fr@sd":"f","abctvplus.au@sydney":"e","abejalestv.ve@hd":"x","abnbiblemovieschannel.us@sd":"e","absoluterealitybywetv.us@sd":"e","acapulcoshore.us@latam":"x","acapulcoshore.us@us":"e","acasa.ro@hd":"x","acasa.ro@sd":"x","acasagold.ro@sd":"x","accdigitalnetwork.us@sd":"e","accesdirect.ro@sd":"x","accnetwork.us@sd":"e","acetv.us@kcksld":"e","acetv.us@sd":"e","acisporttv.it@sd":"x","action24.gr@sd":"x","adjarasport1.ge@sd":"x","adotv.bj@sd":"f","adrenalinapuratv.us@brazil":"x","adrenalinapuratv.us@sd":"x","adultswim.us@west":"e","adultswimlatinamerica.us@brazil":"x","adultswimlatinamerica.us@panregional":"x","adventureearth.de@sd":"e","ae.us@east":"e","aelatinamerica.us@brazil":"x","aelatinamerica.us@panregional":"x","afghannobelmovies.ca@sd":"x","aflam.sa@sd":"x","afrafilm.ir@sd":"x","afraseries.ir@sd":"x","africa24sport.fr@sd":"f","afrolandtv.us@sd":"e","aguacatetv.ve@sd":"x","alankartv.in@sd":"x","alarabiyaprograms.ae@sd":"x","alegretvrd.do@sd":"x","alerteamalibu.us@france":"f","alfasport.cy@sd":"x","alfoldtv.hu@sd":"x","aliraqiasport.iq@sd":"x","aljazeeradocumentary.qa@sd":"x","allblkgems.us@sd":"e","allocine.cm@sd":"e","allrealitybywetv.us@sd":"e","alltimemovies.in@sd":"x","allweddingswetv.us@sd":"e","alphacinema.ru@hd":"x","alternatv.ar@sd":"x","altmediatv.py@sd":"x","alwaysfunnyvideos.us@sd":"e","amarintv.th@sd":"x","amc.us@easthd":"e","amcenespanol.us@sd":"x","amceurope.uk@bulgary":"x","amceurope.uk@czechrepublic":"e","amceurope.uk@hungary":"e","amceurope.uk@poland":"x","amceurope.uk@romania":"e","amclatinamerica.us@brazil":"x","amclatinamerica.us@panregional":"x","amcserieslatinamerica.us@panregional":"x","amediahit.ru@sd":"x","amediapremium.ru@sd":"x","americancrimechannel.pl@poland":"e","americanheroeschannel.us@sd":"e","americanhorrors.us@sd":"e","americasnexttopmodel.us@ca":"e","americasnexttopmodel.us@sd":"e","americateve.pr@sd":"x","amritatv.in@sd":"x","anandatv.bd@sd":"x","anaylos7.us@spain":"x","anctelevision.co@sd":"x","andromeda.us@italy":"x","andromeda.us@spain":"x","andromeda.us@uk":"e","andtv.in@hd":"x","andtv.in@international":"x","andtv.in@sd":"x","andxplorhd.in@hd":"x","angermanagementchannel.us@sd":"e","angiangtv2.vn@sd":"x","angiangtv3.vn@sd":"x","animalplanet.in@hd":"e","animalplanet.in@sd":"e","animalplanet.ru@sd":"x","animalplanet.us@east":"e","animalplanetlatinamerica.us@hd":"x","animalplanetlatinamerica.us@sd":"x","anixehdserie.de@sd":"x","anixeplus.de@sd":"x","anjantv.in@sd":"x","ant1.gr@sd":"x","ant1cyprus.cy@sd":"x","antarestelevision.pe@sd":"x","antena21.do@hd":"x","antena21.do@sd":"x","antenahd.pl@sd":"x","antenastars.ro@sd":"x","anthonybourdainpartsunknown.us@uk":"e","antiquesroadshowuk.us@sd":"e","aplustv.pk@sd":"x","apnapunjabtv.ca@sd":"x","aptv.gh@sd":"e","archivosforenses.us@spain":"x","arena4.hu@sd":"x","arenasport1.sk@sd":"x","arenasport1premium.rs@sd":"x","arenasport1premium.si@sd":"x","arenasport2.sk@sd":"x","arenasportpremiumm1.mk@sd":"x","arenasportpremiumm2.mk@sd":"x","arenasportpremiumm3.mk@sd":"x","arewethereyet.us@sd":"e","areyoutheone.se@dk":"e","areyoutheone.se@no":"e","areyoutheone.se@se":"e","armeniapremium.am@sd":"x","arryadia.ma@sd":"x","arsenal.ru@sd":"x","arte.de@hd":"x","arte.de@sd":"x","arte.fr@sd":"f","artflixmovieclassics.us@sd":"e","arubatvplus.aw@sd":"e","as3sporttv.ve@sd":"x","asharqdiscovery.sa@sd":"x","asharqdocumentary.sa@sd":"x","asiaexpressnonstop.ro@sd":"x","asianbox.mn@sd":"x","asiancrush.us@sd":"e","asiandrama.hk@sd":"x","asianet.in@hd":"x","asianetmiddleeast.in@sd":"x","asianetmovies.in@hd":"x","asiatv.lk@hd":"e","aspor.tr@sd":"x","astrahanrusport.ru@sd":"x","atglive.se@sd":"x","athomewithfamilyhandyman.us@sd":"e","atlas.us@sd":"e","atmrozrywkarework.pl@hd":"x","atv.pk@sd":"x","auctionhunters.de@dach":"x","auctionhunters.de@gb":"e","auctionhunters.se@dk":"e","auctionhunters.se@no":"e","auctionhunters.se@se":"e","auroramediafilms.gt@sd":"x","autentichistory.de@sd":"e","avaseries.ir@sd":"x","avatar.de@gb":"e","avatar.se@dk":"e","avirewind.us@sd":"x","avtkhyber.pk@sd":"x","awapasportstv.sv@sd":"x","awkward.de@dach":"x","awtv.br@hd":"x","axn.br@sd":"x","axn.pt@sd":"x","axnadria.us@sd":"e","axnasia.sg@malaysia":"x","axnasia.sg@taiwan":"x","axnblack.pl@sd":"x","axnblack.us@bulgary":"x","axnblack.us@czechrepublic":"e","axnblack.us@hungary":"e","axnblack.us@poland":"x","axnblack.us@romania":"e","axncee.es@bulgary":"x","axncee.es@czechrepublic":"x","axncee.es@hungary":"e","axncee.es@romania":"e","axncrime.us@sd":"e","axnlatinamerica.us@andes":"x","axnlatinamerica.us@centralamerica":"x","axnlatinamerica.us@mexico":"x","axnlatinamerica.us@south":"x","axnmovies.es@sd":"x","axnmovies.pt@sd":"x","axnpoland.pl@sd":"x","axnspin.hu@poland":"x","axnspin.hu@sd":"x","axnspin.pl@sd":"x","axnwhite.pl@sd":"x","axnwhite.us@bulgaria":"x","axnwhite.us@czechrepublic":"x","axnwhite.us@poland":"x","axnwhite.us@portugal":"x","axnwhite.us@sd":"e","aymsports.mx@sd":"x","azclic.mx@sd":"x","azcorazon.mx@sd":"x","aztecadeportesnetwork.mx@sd":"x","aztecainternacional.mx@sd":"x","b4ubhojpuri.in@sd":"x","b4ukadak.in@sd":"x","b4umovies.in@india":"x","babalhara.sa@sd":"x","bacanteveo.ec@sd":"x","backstage.us@sd":"e","bahrainsports1.bh@sd":"x","bahrainsports2.bh@sd":"x","balabol.ru@sd":"x","bandsports.br@sd":"x","barcatv.es@sd":"e","barktv.us@sd":"e","barrescue.us@ca":"e","barrescue.us@sd":"e","battlestargalactica.us@sd":"e","baywatch.us@us":"e","bbcamerica.us@east":"e","bbcbrit.uk@poland":"e","bbcdrama.uk@spain":"x","bbcearth.uk@czechia":"x","bbcearth.uk@hungary":"x","bbcearth.uk@poland":"e","bbcearth.uk@romania":"e","bbcearth.uk@romaniahd":"e","bbcearth.uk@turkiye":"e","bbcearth.uk@us":"e","bbcfirst.uk@poland":"x","bbcfirst.uk@romania":"e","bbcfirst.uk@turkiye":"e","bbcfour.uk@uk":"e","bbcnl.nl@hd":"x","beattv.nl@sd":"x","becker.se@dk":"e","becker.se@no":"e","becker.se@se":"e","beinboxoffice1.tr@sd":"x","beinboxoffice2.tr@sd":"x","beinboxoffice3.tr@sd":"x","beinmoviesstars.tr@sd":"x","beinmoviesturk.tr@sd":"x","beinsportsxtra.us@sd":"e","beinsportsxtraenespanol.us@sd":"x","beksports.us@west":"e","belarus2.by@hd":"x","belarus5.by@hd":"x","belarus5.by@internet":"x","belarus5.by@sd":"x","bellatormma.us@sd":"e","bellavision.do@sd":"x","bestofdrphil.us@sd":"e","bestofmtv.se@dk":"e","bestofmtv.se@no":"e","bestofmtv.se@se":"e","bestofparadisehotelfinalveckan.se@se":"e","bestofparadisehotelkyssarkarlek.se@se":"e","bestofparadisehotelpandorasask.se@se":"e","bestofparadisehotelskolveckan.se@se":"e","bestofthedrewbarrymoreshow.se@dk":"e","bestofthedrewbarrymoreshow.se@no":"e","bestofthedrewbarrymoreshow.se@se":"e","bestofthedrewbarrymoreshow.us@ca":"e","bet.se@dk":"e","bet.se@no":"e","bet.se@se":"e","betcinema.us@sd":"e","betclassicsplutotv.us@sd":"e","betcomedymovies.us@sd":"e","betplutotv.us@br":"x","betplutotv.us@us":"e","betvisionaries.us@sd":"e","beverlyhills90210.us@sd":"e","beyondthegates.us@sd":"e","bflixmovies.in@sd":"x","bhojpuricinema.in@sd":"x","bialogardzkatelewizjakablowa.pl@hd":"x","bigbrother.us@sd":"e","bigbrotherclassic.de@dach":"x","billiardtv.us@sd":"e","bitme.mx@sd":"x","bitmelatinamerica.mx@sd":"x","bizcinema.uz@sd":"x","biztv.uz@sd":"x","black.ru@sd":"x","blackinkcrew.us@sd":"e","blaze.uk@sd":"e","blitstv.br@sd":"x","blokbaster.ru@hd":"x","bloombergoriginals.us@sd":"e","bloombergoriginals.us@us":"e","bluebloods.us@sd":"e","bokstv.ru@sd":"x","bolentertainment.pk@hd":"x","boligjakten.se@no":"e","bollygold.in@hd":"x","bollywood.ru@hd":"x","bollywoodclassic.ro@romania":"x","bollywoodfilm.ro@sd":"x","bollywoodhd.ro@russia":"x","bolt.ru@sd":"x","bolt.ua@sd":"x","bonanza.us@ca":"e","bonanza.us@sd":"e","boncetv.cw@sd":"x","boncheslatinostv.do@sd":"x","bondirescue.se@dk":"e","bondirescue.se@no":"e","bondirescue.se@se":"e","bondirescue.us@ca":"e","boreal.do@sd":"x","bouncexl.us@sd":"e","bravofarsitv.ir@sd":"x","breinholts.se@dk":"e","britainsnexttopmodel.se@dk":"e","britainsnexttopmodel.se@no":"e","britainsnexttopmodel.se@se":"e","britboxmysteries.us@sd":"e","brondbytv.se@dk":"e","btbinfo.pl@sd":"e","btv.ug@sd":"e","btvaction.bg@sd":"x","btvcinema.bg@sd":"x","btvlady.bg@sd":"x","buenatv.pr@sd":"x","bull.se@dk":"e","bull.se@no":"e","bull.se@se":"e","buzzr.us@sd":"e","cabofriotv.br@sd":"x","cafefilm.ir@sd":"x","cagneylacey.de@gb":"e","campkulinaris.se@no":"e","campkulinaris.se@se":"e","canal10mardelplata.ar@sd":"x","canal14codazzi.co@sd":"x","canal9link.ar@sd":"x","canalchilote.cl@sd":"x","canalcinedios.co@sd":"x","canaldointer.br@sd":"x","canale5.it@hd":"x","canale5.it@sd":"x","canalnets.co@sd":"x","canalplus.fr@sd":"f","canalplusactioneurope.nl@czechia":"x","canalplusactioneurope.nl@netherlands":"x","canalplusactioneurope.nl@slovakia":"x","canalpluscinemas.fr@sd":"f","canalplusdokument.pl@sd":"x","canalplusfilm.pl@sd":"x","canalplusseriale.pl@sd":"x","canalplussport.fr@sd":"f","canalplussport2sk.sk@sd":"x","canalplussport360.fr@sd":"f","canalplussport3sk.sk@sd":"x","canalplussport4sk.sk@sd":"x","canalplussport5sk.sk@sd":"x","canalplussport6sk.sk@sd":"x","canalplussport7sk.sk@sd":"x","canalplussport8sk.sk@sd":"x","canalplussportsk.sk@sd":"x","canalpulpotv.ar@sd":"x","canalshowsport.ar@sd":"x","canaltroplus.co@sd":"x","canalwomtv.co@sd":"x","canelatv.us@sd":"x","canicatv.co@sd":"x","capital21.mx@sd":"x","captain.in@sd":"x","capterre.es@fr":"f","carac1.ch@sd":"f","carac2.ch@sd":"f","carac3.ch@sd":"f","carac4.ch@sd":"f","carac5.ch@sd":"f","carastv.ar@sd":"x","carchase.se@dk":"e","carchase.se@no":"e","carchase.se@se":"e","carchase.us@sd":"e","cazadordehomicidas.us@spain":"x","cbcsport.az@hd":"x","cbsenespanol.us@sd":"e","cbssportsgolazonetwork.us@sd":"e","cbssportshq.us@sd":"e","cctv16.cn@hd":"x","cctv3.cn@sd":"x","cctv5plus.cn@sd":"x","cctv6.cn@hd":"x","cctv6.cn@sd":"x","cctv9.cn@sd":"x","cctvbilliards.cn@hd":"x","cctvgolftennis.cn@hd":"x","cctvstormfootball.cn@hd":"x","cctvstormtheater.cn@hd":"x","cctvthefirsttheater.cn@hd":"x","cctvweapontechnology.cn@hd":"x","cdndeportes.do@sd":"x","celebritynamegame.us@sd":"e","celestialmovies.hk@sd":"x","cgentertainment.it@sd":"x","cgtndocumentary.cn@sd":"e","chandeltv.tg@sd":"f","channel200.nz@sd":"e","channel8.ru@sd":"x","channelk.mm@sd":"x","channelu.sg@sd":"e","chaoscity.us@germany":"x","charanatv.lk@sd":"x","charge.us@sd":"e","charterfeber.se@no":"e","chcaction.cn@sd":"x","che.ru@sd":"x","cheers.us@ca":"e","cheksiztv.uz@sd":"x","chemodantv.ua@sd":"e","chilechannel.cl@sd":"e","chinatravel.cn@sd":"e","choppertown.us@sd":"e","chromatv.br@sd":"x","cibaenatv.do@sd":"x","cincin.de@it":"x","cindietv.br@hd":"e","cine34.it@hd":"x","cine34.it@sd":"x","cine666byplutotv.de@fr":"f","cineactionbyplutotv.de@fr":"f","cineadrenalina.us@sd":"x","cineamor.us@sd":"x","cineaventura.us@sd":"e","cinebox.bg@sd":"x","cinebyplutotv.de@fr":"f","cinecanal.us@pacific":"x","cinecanal.us@panregional":"x","cinecanal.us@south":"x","cinecatastrophebyplutotv.de@fr":"f","cinedasiebyplutotv.de@fr":"f","cineenespanol.us@sd":"e","cinefamiliar.us@sd":"x","cinefriki.es@sd":"x","cinehispano.us@sd":"x","cinehorreurbyplutotv.de@fr":"f","cinelatino.mx@sd":"x","cinema.mn@sd":"x","cinema.ru@sd":"x","cinemaratonplus.ro@hd":"x","cinemaworld.my@sd":"e","cinemax.cz@czechia":"x","cinemax.us@west":"e","cinemax2.cz@czechia":"x","cinemax2centraleurope.hu@poland":"x","cinemaxasia.sg@hd":"e","cinemaxasia.sg@sd":"e","cinemaxcentraleurope.hu@poland":"x","cinemaxclassics.us@east":"e","cinemaxhits.us@east":"e","cinemaxlatinamerica.us@hd":"x","cinemaxlatinamerica.us@sd":"x","cinenanar.fr@sd":"f","cineplus.ua@sd":"x","cineplusclassic.fr@sd":"f","cineplusemotion.fr@sd":"f","cineplusfrisson.fr@sd":"f","cineplushit.ua@sd":"x","cinepluslegend.ua@sd":"x","cinepremiere.us@sd":"x","cinepremium.us@sd":"x","cineramatelevision.bo@sd":"x","cineretrobyplutotv.de@fr":"f","cineromancebyplutotv.de@fr":"f","cineromantico.us@sd":"e","cinescifibyplutotv.de@fr":"f","cinesony.us@sd":"e","cinestar1bulgaria.bg@sd":"x","cineterror.us@br":"x","cineterror.us@latam":"x","cineterror.us@us":"x","cinethrillersbyplutotv.de@fr":"f","cinevault80s.us@sd":"e","cinewestern.es@sd":"x","cinewestern.fr@sd":"f","cinewesternbyplutotv.de@fr":"f","cinewow.ro@sd":"x","circle.us@sd":"e","cityedenkinoaction.ru@hd":"x","cityedenkinoart.ru@hd":"x","cityedenkinoasia.ru@hd":"x","cityedenkinodetektiv.ru@hd":"x","cityedenkinodok.ru@hd":"x","cityedenkinodrama.ru@hd":"x","cityedenkinofantastika.ru@hd":"x","cityedenkinoklassika.ru@hd":"x","cityedenkinokomediya.ru@hd":"x","cityedenkinomistika.ru@hd":"x","cityedenkinosemya.ru@hd":"x","cityedentelenovella.ru@hd":"x","ciudadesdelociotv.es@sd":"x","clarocinema.mx@sd":"x","clarosports.mx@sd":"x","clarovisiontv.do@sd":"x","classiccinema.us@sd":"e","classicmovieschannel.us@sd":"e","classicmoviewesterns.us@sd":"e","classiquetv.br@sd":"x","clicktvchile.cl@sd":"x","cnaoriginals.sg@sd":"e","cnbce.tr@sd":"x","cndfilmdiscoverychannel.cn@sd":"x","cndfilmmiddleschoolchannel.cn@sd":"x","cocotv.do@sd":"x","coldcasefiles.us@sd":"e","colimdotv.do@sd":"x","colors.in@hd":"x","colors.in@sd":"x","colorsbangla.in@hd":"x","colorsbanglacinema.in@sd":"x","colorscineplex.in@hd":"x","colorscineplex.in@sd":"x","colorscineplexbollywood.in@sd":"x","colorsgujarati.in@sd":"x","colorsinfinity.in@hd":"e","colorskannada.in@hd":"x","colorsmarathi.in@hd":"x","colorsmena.in@hd":"x","colorssuper.in@sd":"x","colorstamil.in@hd":"x","colosaltv.cr@sd":"x","combate.br@sd":"x","comet.us@sd":"e","conectamaistv.br@sd":"x","cops.us@sd":"e","cosmostv.ar@hd":"x","cosmostv.ar@sd":"x","courttv.us@sd":"e","cricketgold.au@sd":"e","crime360.us@sd":"e","crimenhistoria.es@sd":"x","crimeplusinvestigation.us@sd":"e","crimeplusinvestigationasia.sg@sd":"e","crimeplusinvestigationcee.uk@sd":"e","crimeplusinvestigationpolsat.pl@sd":"x","crtv.cl@sd":"x","csi.se@dk":"e","csi.us@sd":"e","csicrimesceneinvestigation.de@gb":"e","csimiami.us@br":"x","csimiami.us@latam":"x","csimiami.us@sd":"e","csimiamienespanol.us@sd":"e","csiny.us@sd":"e","csinyenespanol.us@sd":"e","cstar.fr@sd":"f","ct2.cz@sd":"x","ctbperthmovieschannel.au@sd":"e","ctsport.cz@sd":"x","curiositynow.de@en":"e","currojimenez.us@spain":"x","d3tv.ml@sd":"f","dallascowboyscheerleaders.se@dk":"e","dallascowboyscheerleaders.se@no":"e","dallascowboyscheerleaders.se@se":"e","dangal2.in@sd":"x","dangertv.us@sd":"e","darkmattertv.us@sd":"e","darshanatv.in@sd":"x","dateline247.us@sd":"e","datingdisasters.us@sd":"e","datingnakeduk.se@dk":"e","datingnakeduk.se@no":"e","datingnakeduk.se@se":"e","dazncombat.uk@sd":"e","dazndartsxplutotv.de@dach":"x","daznheldinnenxplutotv.de@dach":"x","dccmakingtheteam.us@sd":"e","ddmalayalam.in@sd":"x","ddnational.in@hd":"x","ddnational.in@sd":"x","ddsports.in@hd":"e","ddsports.in@sd":"x","deadlywomen.us@uk":"e","dealornodeal.us@sd":"e","degrassi.us@us":"e","delreytv.py@sd":"x","dengulesofamedallansindberg.se@dk":"e","densshowbiz.id@sd":"x","depeliculalatinamerica.mx@sd":"x","depeliculaplus.mx@sd":"x","depeliculaus.us@sd":"x","deportestvc.hn@sd":"x","deportv.ar@sd":"x","desichannel.in@sd":"x","designatedsurvivor.us@sd":"e","detetivesmedicos.us@br":"x","detseneshowmedchristianfuhlendorff.se@dk":"e","detskoekino.ru@international":"x","deungemodre.se@dk":"e","dhe.us@sd":"x","diagnosismurder.se@dk":"e","diagnosismurder.se@no":"e","diagnosismurder.se@se":"e","diema.bg@sd":"x","diffrentstrokesarnold.us@brazil":"x","digisport2.ro@hd":"x","discoveringchina.cn@sd":"e","discoveryasiataiwan.tw@sd":"e","discoverychannel.hu@sd":"x","discoverychannel.in@sd":"e","discoverychannel.it@sd":"x","discoverychannel.nl@sd":"x","discoverychannel.pl@sd":"x","discoverychannel.ru@sd":"x","discoverychannel.us@east":"e","discoverychannellatinamerica.us@panregional":"e","discoveryhistoria.pl@sd":"x","discoveryworld.us@brazil":"x","discoveryworld.us@latinamerica":"x","divisport.ua@sd":"x","docmartin.se@se":"e","docmartin.us@ca":"e","doctorwhoclassic.us@us":"e","docubaytv.in@sd":"e","docubox.nl@russia":"x","docubox.nl@sd":"e","documentaryplus.us@international":"e","documentaryplus.us@us":"e","docurama.us@sd":"e","dogthebountyhunter.us@uk":"e","dogthebountyhunter.us@us":"e","dogwhisperer.us@uk":"e","dokusat.de@sd":"x","domkino.ru@international":"x","domkino.ru@sd":"x","domkinopremium.ru@hd":"x","domkinopremium.ru@sd":"x","dongnaitv2.vn@sd":"x","donnatv.it@sd":"x","donttellthebride.uk@sd":"e","dorama.ru@hd":"x","dorama.ru@sd":"x","dossiersfbi.us@france":"f","draftkingsnetwork.us@sd":"e","dramachannel.th@sd":"x","dramasangat.my@sd":"x","dreamtv.mn@sd":"x","dsports.us@panregional":"x","dsports2.us@panregional":"x","duckdynasty.us@uk":"e","dust.us@sd":"e","dvojka.sk@sd":"x","dynamokyivtv.ua@sd":"x","dynasty.us@sd":"e","e.pl@sd":"x","e.us@east":"e","e24.in@sd":"x","e4.uk@sd":"e","ebonytvbylionsgate.us@sd":"e","ebscinema.us@sd":"x","ecovision.do@sd":"x","edessatv.tr@sd":"x","edntv.hn@sd":"x","edutainmenttv.mn@sd":"x","ekeepingup.us@sd":"e","ekranmovies.ir@sd":"x","elatinamerica.us@mexico":"x","elatinamerica.us@south":"x","elcanalfeliz.cl@sd":"x","elcomisario.us@spain":"x","eldotv.lu@sd":"x","electricnow.us@sd":"e","elementalchannel.br@sd":"x","elencantadordeperros.us@spain":"x","elevensports1.pl@sd":"e","elevensports2.pl@sd":"e","elevensports3.pl@sd":"e","elevensports4.pl@sd":"e","elheddaftv.dz@sd":"x","elrey.us@sd":"e","elytv.br@sd":"x","emociontv.cl@sd":"x","emotionl.fr@sd":"f","empenosalobestia.us@spain":"x","enelpuntodemira.us@spain":"x","entchannel.uk@hd":"x","enterfilm.ua@sd":"x","enterr10bangla.in@sd":"x","entertainmenttonight.us@sd":"e","entfamily.uk@hd":"x","epicbharat.in@digital":"x","epicbharat.in@sd":"x","epicbhojpuri.in@digital":"x","epicbhojpuri.in@sd":"x","epiccrimes.in@sd":"x","epicparivar.in@sd":"x","epictv.in@digital":"x","eplanettv.ir@sd":"x","equalympic.ua@sd":"x","equidia.fr@sd":"f","ert3.gr@sd":"x","ertsports1.gr@hd":"x","ertsports2.gr@hd":"x","espn.br@sd":"x","espn.nl@hd":"x","espn.us@hd":"e","espn.us@sd":"e","espn2.nl@hd":"x","espn2.us@hd":"e","espn2latinamerica.us@argentina":"x","espn2latinamerica.us@colombia":"x","espn2latinamerica.us@south":"x","espn3.br@sd":"x","espn3.nl@hd":"x","espn3latinamerica.us@argentina":"x","espn3latinamerica.us@south":"x","espn4.br@sd":"x","espn4.nl@hd":"x","espn4latinamerica.us@south":"x","espn5latinamerica.us@south":"x","espn6latinamerica.us@sd":"x","espn7latinamerica.us@sd":"x","espn8theocho.us@espn8theochohd":"e","espndeportes.us@hd":"x","espnextralatinamerica.us@argentine":"x","espnlatinamerica.us@argentina":"x","espnlatinamerica.us@colombia":"x","espnlatinamerica.us@south":"x","espnpremium.ar@hd":"x","espnpremium.cl@sd":"x","espnu.us@hd":"e","espnu.us@sd":"e","esport3.es@originals":"x","esport3.es@sd":"x","estacionlimachetv.cl@sd":"x","estrellagames.us@sd":"x","estrellatv.us@sd":"x","estrellatv.us@wmbctv":"e","etb2on.es@hd":"x","etvcinema.in@hd":"x","etvcinema.in@sd":"x","etvjosh.in@hd":"x","etvplus.ee@sd":"x","etvplus.in@hd":"x","etvplus.in@sd":"x","etvtelugu.in@hd":"x","europaeuropa.ar@sd":"e","eurosport.in@sd":"e","eurosport1.fr@hungary":"x","eurosport1.fr@russia":"x","eurosport1.fr@turkiye":"x","eurosport1polska.pl@sd":"x","eurosport2.fr@hungary":"x","eurosport2.fr@russia":"x","eurosport2.fr@turkiye":"x","eurosport2polska.pl@sd":"x","eurosport3polska.pl@sd":"x","eurosport4kczechia.cz@uhd":"x","eurosport4polska.pl@sd":"x","eventyrligoppussing.se@no":"e","evitv.cd@sd":"f","evrokino.ru@hd":"x","evrokino.ru@sd":"x","expressentertainment.pk@sd":"x","extrapronews.gr@sd":"x","extremesportschannel.ru@sd":"x","extremesportschannelpolska.pl@sd":"e","f1channel.ie@us":"e","faktmarathi.in@sd":"x","falaktv.pk@sd":"x","familienfrabryggen.se@dk":"e","familyties.us@sd":"e","fan.ru@sd":"x","farscape.us@sd":"e","fastfunbox.nl@sd":"e","fbifiles.us@uk":"e","fboyisland.se@dk":"e","fbtv.tr@sd":"e","fcklovinderne.se@dk":"e","fearfactor.us@us":"e","feelgooddrama.us@sd":"e","fem3.hu@sd":"x","fenikspluskino.ru@sd":"x","fevatv.ca@sd":"e","ficomchannel.id@sd":"x","fifaplus.uk@english":"e","fifaplus.uk@french":"f","fifaplus.uk@german":"x","fifaplus.uk@hispanicamerica":"x","fifaplus.uk@italy":"x","fifaplus.uk@portuguese":"x","fifaplus.uk@spain":"x","fifaplus.uk@unitedstates":"e","fifapluswomen.uk@english":"e","fightbox.nl@hd":"e","fightbox.nl@poland":"x","fightbox.nl@sd":"e","fightnetwork.ca@sd":"e","film1action.nl@sd":"e","film1drama.nl@sd":"x","film1family.nl@sd":"x","film1premiere.nl@sd":"x","film4.hu@sd":"x","filmarts.ar@panregional":"x","filmax.pk@sd":"x","filmazia.pk@sd":"e","filmboxplusaction.pl@hd":"e","filmboxpluscomedy.pl@czechia":"x","filmboxpluscomedy.pl@magyar":"x","filmboxpluscomedy.pl@poland":"x","filmboxpluscomedy.pl@romania":"e","filmboxplusemotion.pl@adria":"e","filmboxplusemotion.pl@bulgaria":"x","filmboxplusemotion.pl@czechia":"x","filmboxplusemotion.pl@hungary":"x","filmboxplusemotion.pl@poland":"x","filmboxplusemotion.pl@romania":"x","filmboxplusfestival.pl@hd":"e","filmboxplusfestival.pl@poland":"x","filmboxplusfestival.pl@sd":"e","filmboxplushits.pl@adria":"e","filmboxplushits.pl@czechia":"x","filmboxplushits.pl@hungary":"e","filmboxplushits.pl@poland":"x","filmboxplushits.pl@romania":"x","filmboxpluslovecrime.pl@adria":"e","filmboxpluslovecrime.pl@bulgaria":"x","filmboxpluslovecrime.pl@czechia":"x","filmboxpluslovecrime.pl@romania":"e","filmboxplusone.pl@bulgaria":"x","filmboxplusone.pl@czechia":"x","filmboxplusone.pl@magyar":"x","filmboxplusone.pl@nederland":"x","filmboxplusone.pl@poland":"x","filmboxplusone.pl@romania":"x","filmboxplusone.pl@ukrainebaltics":"x","filmcafe.hu@hungary":"x","filmcafe.hu@romania":"x","filmessuspense.us@br":"x","filmex.mx@sd":"x","filmexclasico.mx@sd":"x","filmnow.ro@hd":"x","filmnow.ro@sd":"x","filmplus.cz@sd":"x","filmplus.hu@sd":"x","filmriseforensicfiles.us@sd":"e","filmuadrama.ua@sd":"x","filmualive.ua@sd":"x","fite247.us@sd":"e","flicksoffury.us@sd":"e","flohockey.us@hd":"e","floracing.us@hd":"e","football.ru@sd":"x","footplus.fr@sd":"f","forensicfiles.us@sd":"x","forlaekkertillove.se@dk":"e","formula1antenaplay.ro@sd":"e","forsidefruer.se@dk":"e","forttv.ug@sd":"e","fortunetv.mm@sd":"x","fox.pl@sd":"e","fox.ru@sd":"x","foxdeportes.us@sd":"e","foxlife.ru@sd":"x","foxsports.ar@sd":"x","foxsports1.us@hd":"e","francophonie24.fr@sd":"f","frasier.us@ca":"e","freebietv.us@sd":"e","frequencenovelas.fr@sd":"f","friday.ru@sd":"x","fridayinternational.ru@kazakhstan":"x","friendstv.in@sd":"x","frightflix.us@sd":"e","frusnavagar.se@se":"e","ftfsports.us@sd":"e","ftv.bo@sd":"x","fubosportsnetwork.us@sd":"e","fueltv.pt@au":"e","fueltv.pt@emea":"e","fueltv.pt@us":"e","fujairahtv.ae@sd":"x","fuse.us@east":"e","futbol.tj@sd":"x","futboltv.uz@hd":"x","futv.cr@sd":"x","fx1.ir@sd":"x","fx2.ir@sd":"x","fxlatinamerica.us@panregional":"x","fxlatinamerica.us@south":"x","galaxiateve.do@sd":"x","galxytv.us@sd":"e","gameplus.ca@sd":"e","gameshowcentral.us@sd":"e","gameshownetwork.us@east":"e","gametoon.nl@sd":"e","gangaurtv.in@sd":"x","gardeniastv.gt@sd":"x","gaviotatv.ec@sd":"x","gefast.br@sd":"x","gembollywood.tr@sd":"x","gemdrama.tr@sd":"x","gemdramaplus.tr@sd":"x","gementertainment.tr@sd":"x","gemfilm.tr@sd":"x","gemfit.tr@sd":"x","gemnature.tr@sd":"x","gemonyx.tr@sd":"x","gempixel.tr@sd":"x","gemriver.tr@sd":"x","gemriverplus.tr@sd":"x","gemrubix.tr@sd":"x","gemrubixplus.tr@sd":"x","gemseriesplus.tr@sd":"x","gemsport.tr@sd":"x","gemtv.tr@sd":"x","gemtvplus.tr@sd":"x","geordieshore.de@gb":"e","geordieshore.de@it":"x","geordieshore.se@dk":"e","geordieshore.se@no":"e","geordieshore.se@se":"e","germanyshore.de@dach":"x","getfactual.us@uk":"e","gextv.cr@hd":"e","ghostdimension.us@uk":"e","ghosthunters.us@uk":"e","ghosttv.br@sd":"x","giktvmx.mx@sd":"x","girasoltv.hn@sd":"x","girlfriendsfilms.us@sd":"e","gitelevision.do@sd":"x","globalworldtv.us@sd":"e","glorykickboxing.us@poland":"e","go3sport1.ee@sd":"x","golazonetwork.us@sd":"e","goldenpremier.mx@sd":"x","goldenpremier2.mx@sd":"x","goldmines.in@sd":"x","goldmines2.in@sd":"x","goldminesaction.in@sd":"x","goldminesbollywood.in@sd":"x","goldminesmovies.in@sd":"x","goldstar.ir@sd":"x","goldtv.it@sd":"x","goldtvsat.it@sd":"x","golfchannel.cz@sd":"x","golfchannellatinamerica.us@sd":"x","golfplus.fr@sd":"f","golfzone.pl@sd":"e","golyatv.hu@sd":"x","goodideatv.th@sd":"x","gotv.py@sd":"x","grandcinema.tr@sd":"x","gravitasmovies.us@sd":"e","greatentertainmenttelevision.us@sd":"e","greatmovies.uk@uk":"e","greatromance.uk@uk":"e","gritxtra.us@sd":"e","grjngowesternmovies.de@sd":"e","groovytv.gr@sd":"x","gtcpunjabi.in@sd":"x","gtv.gt@sd":"x","guarotv.ve@sd":"x","gunsmoke.us@sd":"e","gzt.tr@sd":"e","h2.bg@sd":"e","h2hd.si@sd":"x","hallmarkmoviesmore.us@sd":"e","happychannel.ro@sd":"x","happydays.se@dk":"e","happydays.se@no":"e","happydays.se@se":"e","happydays.us@ca":"e","happydays.us@sd":"e","harbinmoviechannel.cn@sd":"x","hardknocks.ca@sd":"e","haunttv.ca@ca":"e","haunttv.ca@sd":"e","hbo.cz@sd":"x","hbo.pl@sd":"x","hbo.us@east":"e","hbo2.cz@sd":"x","hbo2.pl@sd":"x","hbo2latinamerica.us@hd":"x","hbo3.cz@sd":"x","hboasia.sg@hd":"e","hboasia.sg@sd":"e","hboasia.sg@taiwan":"e","hbohits.us@east":"e","hbohitsasia.sg@hd":"e","hbomovies.us@east":"e","hbomundilatinamerica.us@sd":"x","hboxtremelatinamerica.us@sd":"x","heartland.us@eastern":"e","heartland.us@web":"e","heleneetlesgarcons.us@france":"f","hellskitchen.us@uk":"e","hero.fi@sd":"x","hidost.in@sd":"e","highwaytoheaven.us@uk":"e","hirutv.lk@sd":"x","historia.es@hd":"x","historia.es@sd":"x","historiayvida.es@sd":"x","history.bg@sd":"x","history.br@sd":"x","history.cz@sd":"x","history.hu@sd":"x","history.nl@sd":"x","history.pl@sd":"e","history.si@hd":"x","history.us@east":"e","history2.pl@sd":"e","history2latinamerica.us@brazil":"x","history2latinamerica.us@panregional":"x","history2ukraine.ua@sd":"x","historyasia.us@sd":"e","historyhit.uk@sd":"e","historylatinamerica.us@panregional":"x","historytv18.in@hd":"e","historytv18.in@sd":"e","historyukraine.ua@sd":"x","hit.ru@hd":"x","hitsmovies.sg@sd":"e","hiyah.us@sd":"e","hogspanning.se@se":"e","holaplay.es@sd":"x","holatvlatinamerica.us@sd":"x","hollywire.us@sd":"e","hollywood.ru@sd":"x","hollywoodukraine.ua@sd":"x","homemadenation.us@sd":"e","homeplus.ir@sd":"x","homesunderhammer.us@uk":"e","homicidehunter.us@uk":"e","horosheekino.ru@sd":"x","horsetv.it@sd":"x","hotbench.us@sd":"e","hotdrama.il@sd":"x","houseoflies.se@dk":"e","houseoflies.se@no":"e","houseoflies.se@se":"e","hrt3.hr@hd":"x","hrt3.hr@sd":"x","htsportv.tr@sd":"x","htv2.vn@sd":"x","htv3.vn@sd":"x","htvlive.do@sd":"x","htvsports.vn@sd":"x","humtv.pk@hd":"x","humtv.pk@sd":"x","icarly.us@br":"x","icarly.us@latam":"x","icarly.us@sd":"e","iccplus.us@sd":"x","icepilots.us@germany":"x","ictv.ua@sd":"x","ictv2.ua@sd":"x","id.bg@sd":"x","iertbcscanal82.mx@sd":"x","ifc.us@east":"e","ifilm2.ir@sd":"x","ifilmarabic.ir@sd":"x","ifilmenglish.ir@sd":"e","ifilmpersian.ir@sd":"x","ilbancodeipugni.us@italy":"x","illusionplus.ru@sd":"x","iltestimone.de@it":"x","impactnetwork.us@sd":"e","impactotelevision.pe@sd":"x","impossiblequizshow.us@sd":"e","inazumaeleven.us@france":"f","india.ru@sd":"x","indiatvaapkiadalat.in@sd":"x","indiyskoyekino.ru@sd":"x","indonesianatv.id@sd":"x","indywoodtv.in@sd":"e","inkmaster.us@ca":"e","inkmaster.us@sd":"e","insidecrime.us@uk":"e","instantsaga.us@us":"f","insulanonstop.ro@sd":"x","intertv.it@sd":"x","intertv.ve@sd":"x","intocrime.fr@sd":"f","introuble.nl@sd":"e","investiga.us@latam":"x","investiga.us@us":"e","investigationbyplutotv.de@fr":"f","investigationdiscovery.hu@sd":"e","investigationdiscovery.in@sd":"e","investigationdiscovery.pl@sd":"e","investigationdiscovery.ru@sd":"x","investigationdiscovery.us@east":"e","investigationdiscoverylatinamerica.us@south":"x","inwild.nl@sd":"e","ionplus.us@east":"e","iontv.us@east":"e","irib3.ir@sd":"x","iris.it@hd":"e","iris.it@sd":"e","ironchef.us@us":"e","islandlucktv.bs@sd":"e","istoriya.ru@sd":"x","itagetv.ng@sd":"x","italia2.it@sd":"x","italiana.it@sd":"x","itv3.uk@sd":"e","itvdeportes.mx@sd":"x","itvhd.kh@sd":"x","izauratv.hu@sd":"x","jade.hk@sd":"x","jag.se@dk":"e","jag.se@no":"e","jag.se@se":"e","jag.us@ca":"e","jaihindtv.in@sd":"x","jalshamovies.in@hd":"x","jarabacoatv.do@hd":"x","jayaplus.in@sd":"x","jerseyshore.se@dk":"e","jerseyshore.se@no":"e","jerseyshore.se@se":"e","jerseyshore.us@sd":"e","jerseyshorefamilyvacation.se@dk":"e","jerseyshorefamilyvacation.se@no":"e","jerseyshorefamilyvacation.se@se":"e","jiangsumoviechannel.cn@sd":"x","jiangsusportsleisurechannel.cn@sd":"x","jiangsuvarietychannel.cn@sd":"x","jiangximoviechannel.cn@sd":"x","jilinmoviechannel.cn@sd":"x","jim.fi@sd":"x","jockytv.hu@sd":"x","johnnycarsontv.us@sd":"e","jordansport.jo@sd":"x","jornadanasestrelasanovageracao.us@br":"x","jornadanasestrelasdeepspacenine.us@br":"x","jornadanasestrelasvoyager.us@br":"x","judgejudy.de@gb":"e","judgejudy.se@dk":"e","judgejudy.se@no":"e","judgejudy.se@se":"e","judgenosey.us@us":"e","k1.ua@sd":"x","k19.at@sd":"x","k2.ua@sd":"x","kabaddi24x7.in@sd":"x","kabeleins.de@sd":"x","kabeleinsdoku.de@sd":"x","kairaliwe.in@sd":"x","kalaignarmurasu.in@sd":"x","kanal7.tr@sd":"x","kanal7avrupa.tr@sd":"x","kanalddrama.tr@sd":"x","kantipurmax.np@sd":"x","karbaladocumentary.iq@hd":"x","kbsjoy.kr@sd":"x","kc2.rw@sd":"f","kcltv.in@sd":"x","kcm.sg@india":"e","kcontentbycjenm.us@sd":"e","kenankel.us@br":"x","kenankel.us@latam":"x","keralavision.in@sd":"x","khl.ru@sd":"x","khushboobangla.in@sd":"x","kidsflix.us@sd":"e","kidsmovieclub.us@sd":"e","kineko.ru@sd":"x","kingsviewtv.ng@sd":"e","kino1.ru@international":"x","kino1.ua@sd":"x","kino2.ua@sd":"x","kino24.ru@sd":"x","kinobarrandov.cz@sd":"x","kinoboevik.kz@sd":"x","kinohit.ru@sd":"x","kinoliving.ua@sd":"x","kinomix.ru@sd":"x","kinonova.bg@sd":"x","kinopokaz.ru@hd":"x","kinopokaz.ru@sd":"x","kinopolska.pl@sd":"x","kinopremyera.ru@hd":"x","kinopremyera.ru@sd":"x","kinosat.ru@sd":"x","kinosemja.ru@sd":"x","kinoseriya.ru@sd":"x","kinosvidanie.ru@sd":"x","kinoteatr.uz@sd":"x","kinotv.ru@hd":"x","kinotv.ru@sd":"x","kinouzhas.ru@sd":"x","kinowood.ua@sd":"x","kix.hk@sd":"e","klasik.hr@sd":"x","kluch.ru@sd":"x","kmcttv391.us@hd":"e","knino.us@sd":"x","komsantv.kh@sd":"x","koratv.pe@sd":"x","kozoomtv.fr@sd":"f","krgvtv52.us@hd":"x","ktvsport.kw@sd":"e","ktvsportplus.kw@sd":"x","kurdsat.iq@sd":"x","kuriakoscine.pt@sd":"x","kvartaltv.ua@sd":"x","l1.pe@sd":"x","l1max.pe@sd":"x","la5.it@sd":"x","lacrossetv.us@sd":"e","lamelinkanatv.cl@sd":"x","lamil35tv.ar@sd":"x","langtfrabryggen.se@dk":"e","lanuestra.cl@sd":"x","lanuevaradiotv977.ec@sd":"x","lapotenteradiotv.cr@sd":"x","laraenredes.ve@sd":"x","larosadeguadalupe.us@sd":"x","latacungatv.ec@sd":"x","latele.pe@sd":"x","lateletuya.ve@sd":"x","latinaclasicos.pe@sd":"x","latv.us@sd":"e","laune.be@sd":"f","lawcrime.us@sd":"e","laziostylechannel.it@hd":"x","lemartv.af@sd":"x","lemiracledelamour.us@france":"f","lesanneesfac.us@france":"f","lesfillesdacote.us@france":"f","lesnouveauxdetectives.us@france":"f","lesorellemcleod.us@italy":"x","lietuvosrytastv.lt@sd":"x","lifetimeasia.us@sd":"e","lifetimelatinamerica.us@brazil":"x","lifetimelatinamerica.us@mexico":"x","lifetimelatinamerica.us@panregional":"x","lifetimemovies.us@east":"e","lifetv.hu@sd":"x","liv.fi@sd":"x","livemusic.us@sd":"e","loading.br@sd":"x","logoplutotv.us@sd":"e","lollywoodhdtv.cd@sd":"f","lonestar.us@poland":"e","lonestar.us@sd":"e","losarchivosdelfbi.us@spain":"x","losasesinatosdemidsomer.us@spain":"x","louislabrocante.us@france":"f","lovehiphop.us@sd":"e","lovepets.ca@us":"e","loversenykozvetites.hu@sd":"x","lovetheplanet.es@de":"x","lovetheplanet.es@en":"e","lovetheplanet.es@es":"x","lovetheplanet.es@it":"x","lrtplius.lt@sd":"x","ltv7.lv@sd":"x","luckydog.us@sd":"e","luksusfaelden.se@dk":"e","luksusfellen.se@no":"e","luksusfellensverige.se@no":"e","lyxfallan.se@se":"e","lyxfallandanmark.se@se":"e","lyxfallannorge.se@se":"e","m2.hu@sd":"x","m4sport.hu@sd":"x","m6.fr@hd":"f","maahtv.my@sd":"x","maasrangatv.bd@sd":"x","macgyver.se@dk":"e","macgyver.se@no":"e","macgyver.se@se":"e","madeinbotv.it@sd":"x","madeinhollywood.us@sd":"e","magellantvnow.us@sd":"e","magicpowerradio.nl@sd":"x","magnavisiontv.uk@sd":"x","magnificentmoviesnetwork.us@sd":"e","magyarmozitv.hu@sd":"x","mahaamax.in@sd":"x","mahamovie.in@sd":"x","mahapunjabi.in@sd":"x","maincastcybersport.ua@sd":"x","maincastsport.ua@sd":"x","makontv.uz@sd":"x","makrodigitaltelevision.ec@sd":"x","malive.nl@sd":"x","manastv.kg@sd":"x","mango.in@sd":"x","mangomobiletv.in@hd":"x","manoranjangrand.in@sd":"x","manoranjanmovies.in@sd":"x","manoranjanprime.in@sd":"x","manoranjantv.in@sd":"x","manoto.uk@sd":"x","maraya.sa@hd":"x","marriedwithchildren.us@uk":"e","marutamtv.in@sd":"x","masadrenalina.us@sd":"e","masontv.ua@sd":"x","mastalk.ve@sd":"x","masterchef.us@brazil":"x","match4.hu@sd":"x","matcharena.ru@sd":"x","matchboets.ru@sd":"x","matchigra.ru@sd":"x","matchplaneta.ru@sd":"x","matchpremier.ru@sd":"x","matchstrana.ru@sd":"x","matchultra.ru@4k":"x","matlock.se@dk":"e","matlock.se@no":"e","matlock.se@se":"e","matlock.us@ca":"e","matlock.us@sd":"e","maverickblackcinema.us@sd":"e","max4.hu@sd":"x","maxcine.us@hd":"x","maxcine2.us@hd":"x","maxcinecomedy.us@hd":"x","maxcinefamily.us@hd":"x","maxcinekids.us@hd":"x","maximatv.ve@sd":"x","maxivisiontv.gt@sd":"x","maxsport1.bg@sd":"x","maxsport2.bg@sd":"x","maxsport3.bg@sd":"x","maxsport4.bg@sd":"x","maxtv.co@hd":"x","mayachannel.th@sd":"x","mazhavilmanorama.in@hd":"x","mazhavilmanorama.in@sd":"x","mbc4.ae@sd":"x","mbcamerica.us@sd":"e","mbcbollywood.ae@sd":"e","mbcdrama.ae@sd":"x","mbcdrama.kr@sd":"x","mbcdramausa.us@sd":"x","mbcmasrdrama.sa@sd":"x","mbcpersia.ae@sd":"x","mbcplusdrama.sa@sd":"x","mcitelevision.co@sd":"e","mcleodsdaughters.us@uk":"e","mcleodstochter.de@dach":"x","mcn6mainchannel.us@sd":"e","mctv.de@hd":"x","medium.de@es":"x","medium.se@dk":"e","medium.se@no":"e","medium.se@se":"e","megacinetv.do@hd":"x","megaficcion.cl@sd":"x","meiahmoviechannel.hk@sd":"x","melradiotv.ec@sd":"x","mentertainmentchannel.mm@sd":"e","meridianotv.ve@sd":"x","meritstreet.us@sd":"e","merrychristmasfromviafree.se@dk":"e","merrychristmasfromviafree.se@no":"e","merrychristmasfromviafree.se@se":"e","metafilmtv.ir@sd":"x","metrotv.ar@sd":"x","metrotv.hn@sd":"x","metv.us@sd":"e","mewatchlive1.sg@sd":"e","mhonedilse.in@sd":"x","mhonemovies.in@sd":"x","mhz.ca@sd":"e","midnightpulp.us@sd":"e","midsomermurders.us@sd":"e","miextranaobsesion.us@spain":"x","militaryhistory.us@sd":"e","mireasa.ro@sd":"x","mirovoekino.kz@sd":"x","mirseriala.ru@sd":"x","missionimpossible.se@dk":"e","missionimpossible.se@no":"e","missionimpossible.se@se":"e","missionimpossible.us@ca":"e","missionimpossible.us@sd":"e","misteriossinresolver.us@sd":"x","mitplastikmareridt.se@dk":"e","mitv.py@sd":"x","mixhollywood.eg@sd":"x","mksix.in@sd":"x","mlb.us@sd":"e","mlbstrikezone.us@sd":"e","mmatv.us@sd":"e","mmatvcom.ru@sd":"e","mnbsport.mn@sd":"x","mnetsport.mk@sd":"x","mnplus.mn@sd":"x","monaratv.lk@sd":"x","mono29.th@sd":"x","monsterjam.us@sd":"e","monterricotv.pe@sd":"x","more4.uk@sd":"e","morethansportstv.de@sd":"x","moretruecrime.us@sd":"e","moretvcrime.de@gb":"e","moretvdrama.us@sd":"e","moretvscifi.de@gb":"e","mosfilmgoldcollection.ru@sd":"x","mosthaunted.uk@uk":"e","moviebangla.bd@sd":"x","moviebox.mn@sd":"x","moviedome.us@germany":"x","movies.us@kpvmld":"e","movies.us@sd":"e","moviesaction.sa@sd":"e","moviesmartturk.tr@sd":"x","moviesnow.in@hd":"e","moviesphere.us@au":"e","moviesphere.us@ca":"e","moviesphere.us@uk":"e","moviesphere.us@us":"e","moviespheregold.us@wfxt":"e","moviestar.bg@sd":"x","moviesthriller.sa@sd":"e","movifykino.lv@sd":"x","movistardeportes.pe@sd":"x","movistarplus.pe@sd":"x","moziklub.hu@sd":"x","moziplus.hu@sd":"x","moziverzum.hu@sd":"x","mrtventertainment.mm@sd":"x","mrtvfarmer.mm@sd":"x","mrtvsports.mm@sd":"x","msg.us@sd":"e","msports.pk@sd":"x","mst3k.us@us":"e","mtv.de@sd":"e","mtv.fr@sd":"f","mtv.in@hd":"x","mtv.in@sd":"x","mtv.pl@sd":"x","mtv.us@east":"e","mtv2.us@east":"e","mtvareyoutheone.us@br":"x","mtvcatfish.se@dk":"e","mtvcatfish.se@no":"e","mtvcatfish.se@se":"e","mtvcatfish.us@br":"x","mtvcatfish.us@ca":"e","mtvcatfish.us@latam":"x","mtvclassics.de@fr":"f","mtvcomoex.us@br":"x","mtvconmiex.us@latam":"x","mtvdating.se@dk":"e","mtvdating.se@no":"e","mtvdating.se@se":"e","mtvdating.us@br":"x","mtvdating.us@ca":"e","mtvdating.us@latam":"x","mtvdrag.us@br":"x","mtvdrag.us@latam":"x","mtvembarazadaalos16.de@es":"x","mtvenespanol.us@sd":"e","mtvexonthebeach.se@dk":"e","mtvexonthebeach.se@no":"e","mtvexonthebeach.se@se":"e","mtvgeordies.de@es":"x","mtvglobal.uk@sd":"e","mtvjerseys.de@es":"x","mtvjerseyshore.us@ca":"e","mtvjovensemaes.us@br":"x","mtvlatinamerica.us@panregional":"x","mtvoriginals.de@es":"x","mtvplutotv.us@br":"x","mtvplutotv.us@latam":"x","mtvplutotv.us@us":"e","mtvreality.us@br":"x","mtvreality.us@ca":"e","mtvreality.us@latam":"x","mtvridiculousness.se@dk":"e","mtvridiculousness.se@no":"e","mtvridiculousness.se@se":"e","mtvridiculousness.us@ca":"e","mtvridiculousness.us@latam":"x","mtvrocks.us@br":"x","mtvrocks.us@latam":"x","mtvshore.us@br":"x","mtvteenmom.se@dk":"e","mtvteenmom.se@no":"e","mtvteenmom.se@se":"e","mtvteenmom.us@latam":"x","mtvthehills.se@dk":"e","mtvthehills.se@no":"e","mtvthehills.se@se":"e","mtvverguenzaajena.de@es":"x","multipremier.mx@sd":"x","multivisionsports.gt@sd":"x","mutv.uk@sd":"e","muzhskoekino.ru@sd":"x","mwddocumentary.mm@sd":"x","mwdmovies.mm@sd":"x","mwdvariety.mm@sd":"x","my5.uz@sd":"x","mycinema.id@sd":"e","mycinemaeurope.ch@sd":"e","mysterytv.us@uk":"e","mythbusters.us@uk":"e","mytimemovienetwork.br@sd":"x","mytimemovienetwork.es@sd":"x","mytimemovienetwork.mx@sd":"x","mytimemovienetwork.uk@sd":"e","mytimemovienetworkeast.us@sd":"e","mytv.kh@sd":"x","n24doku.de@sd":"x","nadaesimposibletv.cl@sd":"x","namayeshtv.ir@sd":"x","nano.ru@hd":"x","nano.ru@sd":"x","nashbridges.us@sd":"e","nashe.ru@hd":"x","nashelubimoekino.ru@sd":"x","nashelubimoekinoukraine.ua@sd":"x","nashemuzhskoe.ru@hd":"x","nashenovoekino.ru@sd":"x","nashkinomir.de@sd":"x","nashkinopokaz.ru@hd":"x","nashville.us@ca":"e","nasim.ir@sd":"x","nationalgeographic.bg@sd":"e","nationalgeographic.cz@sd":"x","nationalgeographic.fi@sd":"x","nationalgeographic.hr@sd":"x","nationalgeographic.hu@sd":"x","nationalgeographic.in@hd":"e","nationalgeographic.in@sd":"e","nationalgeographic.mx@sd":"x","nationalgeographic.nl@hd":"x","nationalgeographic.nl@sd":"x","nationalgeographic.pl@sd":"e","nationalgeographic.ro@sd":"e","nationalgeographic.ru@sd":"x","nationalgeographic.tr@sd":"x","nationalgeographic.us@east":"e","nationalgeographic.us@hdeast":"e","nationalgeographiclatinamerica.us@panregional":"x","nationalgeographicwild.bg@sd":"x","nationalgeographicwild.cz@sd":"x","nationalgeographicwild.hu@sd":"x","nationalgeographicwild.in@hd":"e","nationalgeographicwild.pl@sd":"x","nationalgeographicwild.ro@sd":"x","nationalgeographicwild.ru@hd":"x","nationalgeographicwild.ru@sd":"x","nationalgeographicwild.tr@sd":"x","nationalgeographicwild.ua@sd":"x","nationalgeographicwild.us@hdeast":"e","naturetime.ca@au":"e","naturetime.ca@es":"x","naturetime.ca@france":"f","naturetime.ca@latam":"x","naturetime.ca@sd":"x","naturetime.ca@uk":"e","nauka.ru@sd":"x","nauticalchannel.it@sd":"f","nbatv.us@sd":"e","nbclx.us@sd":"e","nbclxhome.us@hd":"e","nbcsportsnow.us@sd":"e","ncis.se@dk":"e","ncis.us@br":"x","ncis.us@ca":"e","ncis.us@latam":"x","ncisdetbedstemedgibbs.se@dk":"e","ncisdetbedstemedtonyziva.se@dk":"e","ncislosangeles.se@dk":"e","ncislosangeles.us@ca":"e","ndtvlanka.lk@sd":"x","neotv.pe@sd":"x","nepal1.in@sd":"x","netmaxtv.gr@sd":"x","nevskiy.ru@sd":"x","newflix.ir@sd":"x","newkmovies.us@sd":"e","nexthd.py@sd":"x","nflchannel.us@sd":"e","nflnetwork.us@sd":"e","nhbollyflix.in@hd":"x","nhbollygold.in@hd":"x","nhkworldpremium.jp@sd":"e","nhlnetwork.us@sd":"e","nhratv.us@sd":"e","nhtamilgold.in@hd":"x","nhtv.kr@sd":"x","niledrama.eg@sd":"x","ningtv.la@sd":"x","ningxiasatellitechannel.cn@sd":"x","nitidatv.do@sd":"x","nitro.de@sd":"x","nollyafrica.uk@sd":"e","nollywoodtv.fr@sd":"f","nonstopkungfu.se@dk":"e","nonstopkungfu.se@no":"e","nonstopkungfu.se@se":"e","nordiskkrimfraviaplay.se@no":"e","nortenatv.ve@hd":"x","nosey.us@uk":"e","nosey.us@us":"e","nosislatv.aw@sd":"x","nospais.cw@sd":"e","nost.us@sd":"e","nostalgiatv.ro@hd":"x","novelachannel.ci@sd":"f","novelisima.us@sd":"x","novyichannel.ua@sd":"x","novyirusskii.ru@hd":"x","nowtv.tr@sd":"x","nrk3.no@sd":"x","nsports.br@sd":"x","ntctv.in@sd":"x","ntv.br@sd":"x","ntvhit.ru@sd":"x","ntvseries.ru@sd":"x","numb3rs.se@no":"e","numb3rs.se@se":"e","numbers.se@dk":"e","numbers.us@br":"x","numeros.us@latam":"x","nutagold.pl@sd":"x","nuviewtv.za@sd":"e","nwmagazine.tg@sd":"f","oasistv.py@sd":"x","okkofutbol.ru@sd":"x","okkoprajmsport.ru@sd":"x","okkosport.ru@sd":"x","olelo55.us@sd":"e","olitv.in@sd":"x","olympicchannel.es@sd":"x","omansportstv.om@sd":"e","omideirantv.us@sd":"e","onegolf.pk@sd":"e","onepaschima.in@sd":"x","onmovies.vn@sd":"x","onthecase.us@uk":"e","onviedrama.vn@sd":"x","opa.cr@sd":"x","orbitachiletv.cl@hd":"x","oruzhie.ru@sd":"x","oscarmoviesbhojpuri.in@sd":"x","osnmoviesaction.ae@sd":"e","ostrosyuzhetnoye.ru@hd":"x","otse.ua@sd":"x","otv.ee@sd":"x","otv.gh@sd":"e","otvprim.ru@sd":"x","outersphere.us@sd":"e","outlaw.us@wggstv":"e","ovaciontv.pe@sd":"x","overtime.us@sd":"e","oxirtv.ir@sd":"x","ozbekistontarixi.uz@sd":"x","pac12insider.us@sd":"e","pantallaclasicaec.ec@sd":"x","paradise.se@dk":"e","paradise.se@se":"e","paradisehotel.se@dk":"e","paradisehotel.se@no":"e","paradisehotel.se@se":"e","paradisehotelunderlagnerne.se@dk":"e","paramountmoviechannel.us@sd":"e","paramountnetwork.pl@sd":"x","paramountpluspicks.us@sd":"e","paranormalstate.us@uk":"e","pasandtv.in@sd":"x","pashto1.pk@sd":"x","pasioneslatinamerica.us@sd":"x","passionelotto.it@sd":"x","patriot.ru@sd":"x","pbrridepass.us@sd":"e","pbsantiquesroadshow.us@sd":"e","pbsnature.us@sd":"e","peartv.in@sd":"x","peopleareawesome.us@poland":"e","peopleareawesome.us@sd":"e","peretzinternational.ru@sd":"x","perrymason.us@ca":"e","perrymason.us@sd":"e","persianacinema.fr@sd":"x","persianadocs.fr@hd":"x","persianafamily.fr@sd":"x","persianafight.fr@hd":"x","persianairanian.fr@sd":"x","persianakorea.fr@sd":"x","persianalatino.fr@sd":"x","persianaplus.fr@sd":"x","persianareality.fr@hd":"x","persianaseries.fr@hd":"x","persianatravel.fr@sd":"x","persianaturkiye.fr@sd":"x","perviyotdel.ru@sd":"x","pes.ru@sd":"x","petclubtv.hk@sd":"x","petloverstv.br@sd":"x","pflmma.us@sd":"e","pgatour.us@sd":"e","pimpmyride.se@dk":"e","pimpmyride.se@no":"e","pimpmyride.se@se":"e","pitaara.in@sd":"x","pksports.pk@sd":"x","playentertainment.pk@sd":"x","plextv.cm@sd":"f","plusmaisum.br@hd":"x","plutoclassicmoviewesterns.us@ca":"e","plutotv90sclassics.de@fr":"f","plutotvaction.se@dk":"e","plutotvaction.se@no":"e","plutotvaction.se@se":"e","plutotvaction.us@us":"e","plutotvactionmovies.us@ca":"e","plutotvadventure.us@ca":"e","plutotvadventure.us@us":"e","plutotvalamexicana.us@latam":"x","plutotvalbertosordi.de@it":"x","plutotvalieninvasion.de@gb":"e","plutotvalieninvasion.se@dk":"x","plutotvaliens.us@br":"x","plutotvamericantruecrime.de@gb":"e","plutotvamorymentiras.us@latam":"x","plutotvanimais.us@br":"x","plutotvanimales.de@es":"x","plutotvanimals.de@dach":"x","plutotvanimals.de@gb":"e","plutotvanimaux.de@fr":"f","plutotvanimego.de@fr":"f","plutotvaventura.us@latam":"x","plutotvaventure.de@fr":"f","plutotvbangbang.us@br":"x","plutotvbrigadecriminelle.de@fr":"f","plutotvbritainatwar.de@gb":"e","plutotvbritischeserien.de@dach":"x","plutotvbudterence.de@dach":"x","plutotvbudterence.se@dk":"e","plutotvbudterence.se@no":"e","plutotvbudterence.se@se":"e","plutotvbuskis.se@se":"e","plutotvcanaluol.us@br":"x","plutotvcatastrofes.de@es":"x","plutotvchristmastuttolanno.de@it":"x","plutotvcineaccion.us@latam":"x","plutotvcineclasico.us@latam":"x","plutotvcineclassicos.us@br":"x","plutotvcinecomedia.de@es":"x","plutotvcinecomedia.us@br":"x","plutotvcinecomedia.us@latam":"x","plutotvcinecomedia.us@us":"x","plutotvcinecomediaromantica.us@br":"x","plutotvcinecrime.us@br":"x","plutotvcinecrimen.us@latam":"x","plutotvcinedeautor.de@es":"x","plutotvcinedrama.us@br":"x","plutotvcinedrama.us@latam":"x","plutotvcineestelar.us@latam":"x","plutotvcinefamilia.us@br":"x","plutotvcinefamilia.us@latam":"x","plutotvcineinspiracao.us@br":"x","plutotvcineinspirador.us@latam":"x","plutotvcinemaitaliano.de@it":"x","plutotvcinemaorientale.de@it":"x","plutotvcineromance.us@br":"x","plutotvcineromance.us@latam":"x","plutotvcineromantico.de@es":"x","plutotvcinesucessos.us@br":"x","plutotvcinesuspenso.us@latam":"x","plutotvcomediasromanticas.de@es":"x","plutotvcomediescultes.de@fr":"f","plutotvcomedymovies.us@ca":"e","plutotvcompetition.us@sd":"e","plutotvconspiracy.de@gb":"e","plutotvcrime.de@dach":"x","plutotvcrime.de@gb":"e","plutotvcrimedrama.us@ca":"e","plutotvcrimedrama.us@sd":"e","plutotvcrimemovies.us@sd":"e","plutotvcultfilms.de@gb":"e","plutotvcultfilms.us@us":"e","plutotvdanskeklassikere.se@dk":"x","plutotvdating.de@fr":"f","plutotvdeportes.us@latam":"x","plutotvdocumentari.de@it":"x","plutotvdogelcazarrecompensas.us@sd":"x","plutotvdokumentar.se@dk":"e","plutotvdokumentar.se@se":"e","plutotvdrama.us@us":"e","plutotvdramamovies.us@ca":"e","plutotvdramascoreanos.us@latam":"x","plutotvdramascoreanosteen.us@latam":"x","plutotvesportes.us@br":"x","plutotvesports.us@latam":"x","plutotvestrellasdeaccion.us@sd":"x","plutotvexplore.de@dach":"x","plutotvfamilymovieclub.de@gb":"e","plutotvfantastic.us@sd":"e","plutotvfantasyhorror.de@gb":"e","plutotvfbi.us@ca":"e","plutotvfernegalaxien.de@dach":"x","plutotvficcaocientifica.us@br":"x","plutotvfilm.de@it":"x","plutotvfilm.se@dk":"e","plutotvfilm.se@no":"e","plutotvfilm.se@se":"e","plutotvfilmancorapiuromantici.de@it":"x","plutotvfilmazione.de@it":"x","plutotvfilmcommedia.de@it":"x","plutotvfilmesacao.us@br":"x","plutotvfilmesaventura.us@br":"x","plutotvfilmesdeluta.us@br":"x","plutotvfilmesnacionais.us@br":"x","plutotvfilmromantici.de@it":"x","plutotvfilmstorici.de@it":"x","plutotvfilmthriller.de@it":"x","plutotvfishing.se@dk":"x","plutotvfood.de@dach":"x","plutotvfood.de@gb":"e","plutotvfranchisefavorites.us@sd":"e","plutotvfrenchcollection.de@fr":"f","plutotvgameshows.us@sd":"e","plutotvgasolina.de@es":"x","plutotvgoreslasher.de@es":"x","plutotvhaialarm.de@dach":"x","plutotvhandboldhighlights.se@dk":"x","plutotvhandboldlive.se@dk":"x","plutotvhandbollhighlights.se@se":"e","plutotvhandbolllive.se@se":"e","plutotvharlequin.se@dk":"e","plutotvharlequin.se@no":"e","plutotvharlequin.se@se":"e","plutotvhistoire.de@fr":"f","plutotvhistoria.de@es":"x","plutotvhistorischeserien.de@dach":"x","plutotvhistory.us@us":"e","plutotvhometowndrama.us@sd":"e","plutotvhorror.se@dk":"e","plutotvhorror.se@no":"e","plutotvhorror.se@se":"e","plutotvhorror.us@ca":"e","plutotvhorror.us@us":"e","plutotvhorrorserien.de@dach":"x","plutotvhumor.se@dk":"x","plutotvicons.us@sd":"e","plutotvimpacto.de@es":"x","plutotvinside.de@fr":"f","plutotvinvasionalien.de@es":"x","plutotvinvestigacao.us@br":"x","plutotvinvestigation.de@gb":"e","plutotvjohnwayne.se@dk":"e","plutotvjohnwayne.se@no":"e","plutotvjohnwayne.se@se":"e","plutotvkdrama.de@es":"x","plutotvkomedi.se@se":"e","plutotvkomedie.se@no":"x","plutotvkultcomedies.de@dach":"x","plutotvkultfilm.se@dk":"x","plutotvkultfilme.de@dach":"x","plutotvkultfilmer.se@no":"e","plutotvkultfilmer.se@se":"e","plutotvlegamiletali.de@it":"x","plutotvlives.us@us":"e","plutotvmilitary.us@sd":"e","plutotvminutoparaganar.us@sd":"x","plutotvmiobsesionfavorita.us@latam":"x","plutotvmisteriosmedicos.us@sd":"x","plutotvmovies.de@dach":"x","plutotvmovies.de@gb":"e","plutotvmystery.de@dach":"x","plutotvnatura.de@it":"x","plutotvnaturaleza.us@latam":"x","plutotvnature.de@dach":"x","plutotvnegociofechado.us@br":"x","plutotvnetmovies.us@br":"x","plutotvnordiccrime.de@dach":"x","plutotvnottidipassione.de@it":"x","plutotvnottidisangue.de@it":"x","plutotvnottiditerrore.de@it":"x","plutotvnovelas.us@br":"x","plutotvnovelas.us@latam":"x","plutotvnovelas.us@us":"x","plutotvnovelasdemexico.us@latam":"x","plutotvnovelasdeotroscontinentes.us@latam":"x","plutotvnovelasdevenezuela.us@latam":"x","plutotvnuestrocine.us@latam":"x","plutotvovernaturlig.se@no":"x","plutotvparanormal.de@dach":"x","plutotvparanormal.de@es":"x","plutotvparanormal.de@fr":"f","plutotvparanormal.de@gb":"e","plutotvparanormal.de@it":"x","plutotvparanormal.se@dk":"e","plutotvparanormal.se@se":"e","plutotvparanormal.us@ca":"e","plutotvparanormal.us@us":"e","plutotvpetrolheads.de@gb":"e","plutotvpolar.de@fr":"f","plutotvpolicial.us@br":"x","plutotvpolizeiserien.de@dach":"x","plutotvpsycho.de@es":"x","plutotvreaction.us@sd":"e","plutotvreality.de@fr":"f","plutotvreality.de@gb":"e","plutotvreality.us@ca":"e","plutotvreality.us@latam":"x","plutotvreality.us@us":"e","plutotvreportagen.de@dach":"x","plutotvretro.us@br":"x","plutotvretroactionmovies.us@ca":"e","plutotvromance.de@dach":"x","plutotvromance.us@us":"e","plutotvromantik.se@dk":"e","plutotvromantik.se@se":"e","plutotvromantikk.se@no":"x","plutotvsanctuary.us@sd":"e","plutotvscience.de@dach":"x","plutotvscience.de@gb":"e","plutotvscience.us@us":"e","plutotvscifi.de@dach":"x","plutotvscifi.de@es":"x","plutotvscifi.de@gb":"e","plutotvscifi.de@it":"x","plutotvscifi.se@dk":"e","plutotvscifi.se@no":"e","plutotvscifi.se@se":"e","plutotvscifi.us@ca":"e","plutotvscifi.us@latam":"x","plutotvscifi.us@us":"x","plutotvscifiseries.de@gb":"e","plutotvserie.de@dach":"x","plutotvserie.de@it":"x","plutotvseriecrime.de@it":"x","plutotvseries.de@es":"x","plutotvseries.us@latam":"x","plutotvseriesacao.us@br":"x","plutotvseriescifi.de@it":"x","plutotvseriescomedia.us@br":"x","plutotvseriescriminais.us@br":"x","plutotvseriescriminales.de@es":"x","plutotvseriesdeaccion.us@latam":"x","plutotvseriesdecomedia.us@latam":"x","plutotvseriesdecrimen.us@latam":"x","plutotvseriesdedrama.us@latam":"x","plutotvseriesdeotroscontinentes.us@latam":"x","plutotvseriesdescifi.us@latam":"x","plutotvseriesdrama.us@br":"x","plutotvseriesfantastiques.de@fr":"f","plutotvserieslatinas.us@latam":"x","plutotvseriesnovelescas.us@br":"x","plutotvseriesscifi.de@es":"x","plutotvseriesscifi.us@br":"x","plutotvshore.de@it":"x","plutotvsitcoms.de@dach":"x","plutotvsitcoms.de@gb":"e","plutotvsnooker900.de@dach":"x","plutotvsnooker900.de@es":"x","plutotvsnooker900.de@fr":"f","plutotvsnooker900.de@gb":"e","plutotvsnooker900.de@it":"x","plutotvsnooker900.se@dk":"e","plutotvsnooker900.se@no":"e","plutotvsnooker900.se@se":"e","plutotvsnooker900.us@ca":"e","plutotvspace.de@dach":"x","plutotvspace.de@gb":"e","plutotvspace.se@dk":"x","plutotvsport.de@it":"x","plutotvsport.se@dk":"e","plutotvsport.se@no":"e","plutotvsport.se@se":"e","plutotvspotlight.us@sd":"e","plutotvstaffpicks.us@sd":"e","plutotvstartrek.de@dach":"x","plutotvstartrek.se@dk":"x","plutotvstoragewars.us@sd":"e","plutotvstoria.de@it":"x","plutotvtelenovelasclasicas.de@es":"x","plutotvtelerealitefrance.de@fr":"f","plutotvterror.us@sd":"e","plutotvterrortrash.us@br":"x","plutotvthetwilightzone.us@sd":"e","plutotvthrillers.de@es":"x","plutotvthrillers.de@gb":"e","plutotvthrillers.us@us":"e","plutotvtoto.de@it":"x","plutotvtoughjobs.de@gb":"e","plutotvtrendingnow.us@sd":"e","plutotvtruecrime.de@dach":"x","plutotvtruecrime.de@es":"x","plutotvtruecrime.de@it":"x","plutotvtruecrime.se@dk":"e","plutotvtruecrime.se@no":"e","plutotvtruecrime.se@se":"e","plutotvtruecrime.us@ca":"e","plutotvtruecrime.us@us":"e","plutotvturbo.us@br":"x","plutotvvarldskrigen.se@se":"e","plutotvverdenskrigene.se@dk":"x","plutotvverdenskrigene.se@no":"e","plutotvweihnachtenimsommer.de@dach":"x","plutotvwestern.de@dach":"x","plutotvwestern.de@es":"x","plutotvwestern.de@it":"x","plutotvwesterns.de@gb":"e","plutotvwesterns.us@ca":"e","plutotvwesterns.us@us":"e","plutotvwesternserien.de@dach":"x","plutotvwildwest.se@dk":"e","plutotvwildwest.se@no":"e","plutotvwildwest.se@se":"e","plutotvwipeout.us@sd":"e","plutotvzombies.de@es":"x","pocketfilms.in@sd":"x","podradiopaplutotv.se@dk":"x","poehali.ru@sd":"x","pokergo.us@us":"e","polimertv.in@sd":"x","polsatfilm.pl@hd":"x","polsatfilm.pl@sd":"x","polsatseriale.pl@hd":"x","polsatseriale.pl@sd":"x","polsatsportfight.pl@sd":"x","polsatviasatexplore.pl@sd":"x","polsatviasathistory.pl@sd":"x","polsatviasatnature.pl@sd":"x","popcorncentral.mx@sd":"x","popstartv.us@sd":"e","poputv.py@sd":"x","powermaxradiotv.ar@sd":"x","premialnoe.ru@hd":"x","premiersports.ph@sd":"e","premiersports2.ph@sd":"e","prime.sy@hd":"x","primecanadatv.ca@sd":"x","pro100tv.ru@sd":"x","procinema.ro@sd":"x","prokino.ua@sd":"x","pronemstv.do@sd":"x","psn.mx@sd":"x","ptcpunjabi.in@hd":"x","ptcpunjabi.in@sd":"x","ptcpunjabigold.in@sd":"x","ptvsports.pk@sd":"x","public4ktv.np@hd":"e","publicmovies.in@sd":"x","pularitv.in@sd":"x","pulatv.do@sd":"x","punjabishorts.in@sd":"x","pxsports.mx@sd":"x","qazsport.kz@sd":"x","qonaevmedia.kz@sd":"x","qtv.in@sd":"x","qtv3.cn@sd":"x","quadro.ru@4k":"e","quiztv.ua@sd":"x","r8diotv.se@dk":"e","racerinternational.pl@fast":"e","racernetwork.us@sd":"e","racerselect.us@sd":"e","racingcom.au@sd":"e","radiocarnavaltv.es@sd":"x","radiomoldovatineret.md@sd":"x","radioomegatv.hn@sd":"x","radiotoppers.nl@sd":"x","radioturrialbatvsports.cr@sd":"x","radiouniversitariasanandres.bo@sd":"x","radiowaczworka.pl@sd":"x","radioyguazutv.ar@sd":"x","rajdigitalplus.in@sd":"x","rajtv.in@sd":"x","rakutentvactionmovies.es@austria":"x","rakutentvactionmovies.es@finland":"e","rakutentvactionmovies.es@germany":"x","rakutentvactionmovies.es@italy":"x","rakutentvactionmovies.es@spain":"x","rakutentvactionmovies.es@uk":"e","rakutentvcomedymovies.es@austria":"x","rakutentvcomedymovies.es@finland":"e","rakutentvcomedymovies.es@germany":"x","rakutentvcomedymovies.es@italy":"x","rakutentvcomedymovies.es@spain":"x","rakutentvcomedymovies.es@uk":"e","rakutentvdramamovies.es@austria":"x","rakutentvdramamovies.es@finland":"e","rakutentvdramamovies.es@germany":"x","rakutentvdramamovies.es@italy":"x","rakutentvdramamovies.es@spain":"x","rakutentvdramamovies.es@uk":"e","rakutentvfamilymovies.es@austria":"x","rakutentvfamilymovies.es@finland":"e","rakutentvfamilymovies.es@germany":"x","rakutentvfamilymovies.es@italy":"x","rakutentvfamilymovies.es@spain":"x","rakutentvfamilymovies.es@switzerland":"x","rakutentvfamilymovies.es@uk":"e","rakutentvnordicfilms.es@finland":"x","rakutentvtopmovies.es@finland":"e","rakutentvtopmovies.es@germany":"x","rakutentvtopmovies.es@italy":"x","rakutentvtopmovies.es@spain":"x","rakutentvtopmovies.es@uk":"e","rakutenviki.us@poland":"e","rakutenviki.us@spain":"x","rallytv.us@sd":"e","rawhide.se@dk":"e","rawhide.se@no":"e","rawhide.se@se":"e","rawhide.us@ca":"e","rawhide.us@sd":"e","raytvhd.np@hd":"x","raytvhd.np@sd":"x","raz1.ua@sd":"x","raz2.ua@sd":"x","rcnmas.co@sd":"x","rcnnovelas.co@sd":"x","realitateasportiva.ro@sd":"x","realitychannel.il@sd":"x","realmadridtv.es@sd":"x","realmadridtvenglish.es@sd":"e","red.ru@hd":"x","red.ru@sd":"x","redbulltv.at@au":"e","redbulltv.at@br":"x","redbulltv.at@de":"x","redbulltv.at@es":"x","redbulltv.at@eumena":"e","redbulltv.at@sd":"e","redbulltv.at@uk":"e","redbulltv.at@us":"e","redengt.br@sd":"x","redepremiumtv.br@sd":"x","redplus.co@sd":"x","reelz.us@sd":"e","remontytv.pl@hd":"x","retroplus3.cl@sd":"x","retv.do@sd":"x","revnaction.us@sd":"e","revrylatinx.us@sd":"e","ridiculousnessnyaavsnitt.se@se":"e","ridiculousnessnyeafsnit.se@dk":"e","ridiculousnessnyeepisoder.se@no":"e","rightnowtv.us@sd":"e","rikutv.pe@sd":"x","ritmutv.kw@sd":"x","rlprotv.cd@sd":"f","rmclife.fr@sd":"f","roar.us@kcwx":"e","roar.us@kokitv":"e","roar.us@sd":"e","roar.us@wkef":"e","roar.us@wsbttv":"e","robinsonekspeditionen.se@dk":"e","rodnoekino.ru@sd":"x","rotanacinemaegypt.eg@sd":"x","rotanacinemaksa.sa@sd":"x","rotanadrama.sa@sd":"x","rotvvalencia.es@sd":"x","rsvhonduras.hn@sd":"x","rtdocumentary.ru@english":"e","rtdocumentary.ru@russian":"x","rtl9.lu@sd":"f","rtlotthon.hu@sd":"x","rtnbdivertissement.bi@sd":"f","rtsdrama.rs@sd":"x","rtshshqip.al@sd":"x","rtshsport.al@sd":"x","runtime.us@sd":"e","runtimeespanol.us@sd":"x","rupashibanglatv.bd@sd":"x","rupasibangla.in@sd":"x","russianextreme.ru@sd":"x","russianextremeultra.ru@sd":"x","russkiybestseller.ru@sd":"x","russkiydetektiv.ru@sd":"x","russkiyillusion.ru@sd":"x","russkiyroman.ru@sd":"x","sabtv.pk@sd":"x","sadatv.in@sd":"x","safaritv.in@sd":"x","salto1.nl@sd":"x","sanatv.in@sd":"x","sanmarinortvsport.sm@sd":"x","saphire.ru@sd":"x","sastv.gt@sd":"x","sbs6classics.nl@hd":"x","scifi.fr@hd":"f","scorpion.de@gb":"e","scorpion.se@dk":"e","scorpion.se@no":"e","scorpion.se@se":"e","screamin.fr@sd":"f","sensacinetvxpluto.de@es":"x","sensingmurder.us@uk":"e","seriemax.ci@sd":"f","seriesbyplutotv.de@fr":"f","seriesclassic.br@sd":"x","servustv.at@sd":"x","setantasports.uk@hd":"e","setantasports.uk@sd":"e","setantasports1.ru@hd":"x","setantasports1.ru@sd":"x","setantasports1eurasia.ie@sd":"e","setantasports2.ru@sd":"x","setantasports2eurasia.ie@sd":"e","setantasports3.ge@sd":"x","setantasportsplusukraine.ua@sd":"x","shabakeh7.us@sd":"x","shamshadtv.af@sd":"x","shandongtvsportschannel.cn@sd":"x","sharjahsports.ae@sd":"e","shef.ru@sd":"x","shemaroofilmigaane.in@hd":"x","shemaroojosh.in@sd":"x","shemarootv.in@sd":"x","shemarooumang.in@sd":"x","shokiruyushchee.ru@hd":"x","shottv.ru@sd":"x","showdomilhao.br@sd":"x","shubhcinematv.in@sd":"x","silkwaycinema.kz@sd":"x","sintetasnohayparaiso.us@spain":"x","sirikannada.in@sd":"x","sirikannadaalltime.in@sd":"x","skitv.ch@sd":"e","skjonnhetsfellendanmark.se@no":"e","skonhetsfallandanmark.se@se":"e","skorayapomoshch.ru@sd":"x","skyracing1.au@sd":"e","skyracing2.au@sd":"e","sl1.ir@sd":"x","sl2.ir@sd":"x","slopestv.us@sd":"e","smithsonianchannelplutotv.us@br":"x","smithsonianchannelplutotv.us@latam":"x","smithsonianchannelselects.se@dk":"e","smithsonianchannelselects.se@se":"e","smotrim100fakty.ru@sd":"x","smotrim100klassika.ru@sd":"x","smotrim100lyubov.ru@sd":"x","smotrim100muzhskoe.ru@sd":"x","smotrim100prazdnik.ru@sd":"x","smotrimchestnyydetektiv.ru@sd":"x","soltv.gq@sd":"x","sonce.ua@sd":"x","sonceplus.ua@sd":"x","sonyaath.in@sd":"x","sonybbcearth.in@hd":"e","sonycanalnovelas.us@sd":"x","sonyentertainmenttelevision.in@hd":"x","sonyentertainmenttelevision.in@sd":"x","sonymarathi.in@sd":"x","sonymax.in@hd":"x","sonymax.in@sd":"x","sonymax2.in@sd":"x","sonymovies.br@sd":"x","sonymovieslatinamerica.us@sd":"x","sonyoneblacklist.fr@hd":"f","sonyonefavoris.fr@hd":"f","sonyonehitsaction.fr@hd":"f","sonyonehitscomedie.fr@hd":"f","sonypal.in@sd":"x","sonypix.in@hd":"e","sonysab.in@sd":"x","sonysportsten1.in@hd":"e","sonysportsten1.in@sd":"e","sonysportsten2.in@sd":"e","sonysportsten3hindi.in@sd":"x","sonysportsten4.in@kannada":"x","sonysportsten5.in@sd":"e","sonywah.in@sd":"x","sooriyantv.ca@sd":"x","sorozatklub.hu@sd":"x","soskanalplus.rs@sd":"x","southstation.in@hd":"x","sowetotv.za@sd":"e","spektrum.cz@sd":"x","spektrum.hu@sd":"x","spektrumhome.cz@sd":"x","spektrumhome.hu@sd":"x","spikeplutotv.us@sd":"e","spiler1.hu@sd":"x","spiler2.hu@sd":"x","spondon.in@sd":"x","sport.kg@sd":"e","sport.sk@sd":"x","sport.uz@sd":"x","sport1.cz@sd":"x","sport1.hu@sd":"x","sport1.ua@sd":"x","sport1baltic.ua@sd":"e","sport2.cz@sd":"x","sport2.hu@sd":"x","sport2.ua@sd":"x","sport3.il@sd":"x","sport3.ua@sd":"x","sport4.il@sd":"x","sport4.ua@sd":"x","sport5.ua@sd":"e","sportitalia.it@sd":"x","sportitalia24.it@sd":"x","sportitaliamotori.it@sd":"x","sportitaliasolocalcio.it@sd":"x","sportivnyy.ru@sd":"x","sportplusqazaqstan.kz@sd":"x","sportsgrid.us@sd":"e","sportstelevision.kp@hd":"x","sporttv.by@sd":"x","sporttv1.pt@sd":"x","sporttv2.pt@sd":"x","sporttv5.pt@sd":"x","sporttv6.pt@sd":"x","sporttv7.pt@sd":"x","sporttvplus.pt@sd":"x","sportv.br@sd":"x","sportv2.br@sd":"x","sportv3.br@sd":"x","sportytv.cz@sd":"x","spotv.id@sd":"e","spotv2.id@sd":"e","sqalatv.pe@sd":"x","ssport.tr@sd":"e","ssport2.tr@sd":"e","stadium.us@sd":"e","starbharat.uk@sd":"x","starchannel.bg@sd":"e","starchannel.cl@sd":"x","starchannel.co@sd":"x","starchannel.gr@sd":"x","starchannel.nl@sd":"x","starchannel.pt@sd":"x","starchannel.si@sd":"x","starchannelinternational.gr@hd":"x","starchannellatinamerica.us@panregional":"x","starchannellatinamerica.us@south":"x","starcinema.ru@sd":"x","starcrime.bg@sd":"x","starcrime.si@sd":"x","starfamily.ru@sd":"x","stargold.in@hd":"x","stargold2.in@hd":"x","starjalsha.in@hd":"x","starjalsha.in@sd":"x","starkiran.in@sd":"x","starlife.bg@sd":"x","starlife.si@sd":"x","starmaa.in@hd":"x","starmaamovies.in@hd":"x","starmovies.in@hd":"e","starmovies.pt@sd":"x","starmovies.si@sd":"x","starplus.in@hd":"x","starplus.uk@sd":"x","starpravah.in@hd":"x","starsports1.in@sd":"e","starsports2.in@hd":"e","starsports2.in@sd":"e","starsports2hindi.in@sd":"x","starsports2telugu.in@hd":"x","starsports3.in@sd":"e","starsportsselect1.in@hd":"e","starsportsselect2.in@hd":"e","startair.ru@sd":"x","startamiltelevision.lk@sd":"x","startrek.us@br":"x","startrek.us@latam":"x","startrek.us@us":"e","startrekdeepspacenine.us@sd":"e","startrekmovies.se@dk":"e","startrekmovies.se@no":"e","startrekmovies.se@se":"e","startrekthenextgeneration.de@dach":"x","startrekthenextgeneration.us@sd":"e","startrektheoriginalseries.de@dach":"x","startrektheoriginalseries.se@dk":"e","startrektheoriginalseries.se@no":"e","startrektheoriginalseries.se@se":"e","startrekvoyager.de@es":"x","startrekvoyager.de@it":"x","startrekvoyager.us@sd":"e","starttriumf.ru@sd":"x","startworld.ru@sd":"x","starvijay.in@uk":"e","starzcinema.us@east":"e","storiecriminali.es@it":"x","storiesbyamc.us@sd":"e","streamforce360.co@main":"x","strongman.us@germany":"x","strongman.us@uk":"e","strongmanchampionsleague.uk@sd":"e","studiooneplus.in@sd":"x","studioyuva.in@sd":"x","subbota.ru@hd":"x","subbota.ru@sd":"x","subintv.in@sd":"x","sukanrtm.my@sd":"x","summerofmovies.us@ca":"e","sundancetv.es@sd":"x","sundancetv.pl@sd":"x","suntv.in@hd":"x","super7fm.do@sd":"x","supercable.cr@sd":"x","supernaturaldrama.us@sd":"e","superplus.ua@sd":"x","supertennis.it@sd":"x","supertv.it@sd":"x","suriyantv.in@sd":"x","suriyatv.in@sd":"x","survivor.us@sd":"e","suspilnesport.ua@sd":"x","svarozhychy.ua@sd":"x","svenskahollywoodfruar.se@se":"e","svenskatruckers.se@no":"e","svenskatruckers.se@se":"e","swervecombat.us@sd":"e","swervesports.us@sd":"e","syfy.us@east":"e","t2movies.ir@sd":"x","talenttv.lk@hd":"e","talkinliveclassicstv.us@sd":"e","talksport.uk@sd":"e","taltv.ne@sd":"f","tamasha.ir@sd":"x","tarangtv.in@sd":"x","tbc2.tz@sd":"x","tcm.us@east":"e","tcm.us@west":"e","tdmentertainment.mo@sd":"x","tdmsports.mo@sd":"x","teenmom.de@fr":"f","teenmom.de@gb":"e","teenmom.de@it":"x","teenmom.us@sd":"e","teleboston.us@sd":"f","telecineaction.br@sd":"x","teledeporte.es@sd":"x","telemas.cr@sd":"x","telemax.do@sd":"x","telemix.us@sd":"f","telemundocorpuschristi.us@sd":"x","telemundotelenovelasclasicas.us@sd":"e","teleplaysureste.mx@sd":"x","telerayo.hn@sd":"x","teletraktv.cl@sd":"x","teluguone.in@hd":"x","tencricket.in@sd":"e","tennischannel.us@plus2":"e","tennischannel.us@sd":"e","tennischannel2.us@sd":"e","tensportspakistan.pk@sd":"e","terra.ru@sd":"x","terramaterwild.de@english":"e","terramaterwild.de@german":"x","tevecolombia.co@sd":"x","tf1.fr@hd":"f","tf1.fr@sd":"f","thalaatv.in@hd":"x","thanthione.in@sd":"x","theaddamsfamily.us@sd":"e","theamazingrace.us@sd":"e","theasylum.us@us":"e","thebobrosschannel.us@sd":"e","thechallenge.us@ca":"e","thechallenge.us@sd":"e","thechatshowchannel.uk@sd":"e","theconners.us@sd":"e","thecyclingchannel.at@sd":"e","thedailyshow.se@dk":"e","thedailyshow.se@no":"e","thedailyshow.se@se":"e","thedoctors.us@hd":"e","thefilmdetective.us@sd":"e","thegrahamnortonshow.uk@sd":"e","thejudgejudychannel.us@ca":"e","thejudgejudychannel.us@sd":"e","theloop.us@sd":"e","thelword.se@dk":"e","thelword.se@no":"e","thelword.se@se":"e","thelwordwennfrauenlieben.de@dach":"x","themovieclub.in@hd":"x","themovieclub.in@plus2":"x","thenest.us@sd":"e","thenewdetectives.de@gb":"e","thenewdetectives.se@dk":"e","thenewdetectives.se@no":"e","thenewdetectives.se@se":"e","thenewdetectives.us@ca":"e","thenewdetectives.us@latam":"x","thenewdetectives.us@us":"e","thepriceisright.us@ca":"e","thepriceisright.us@hd":"e","thepriceisrightthebarkerera.us@sd":"e","therifleman.us@sd":"e","thetwilightzone.se@dk":"e","thetwilightzone.se@no":"e","thetwilightzone.se@se":"e","thewalkingdeaduniverse.us@sd":"e","thewildwildwest.se@dk":"e","thewildwildwest.se@no":"e","thewildwildwest.se@se":"e","thewildwildwest.us@sd":"e","theyellowcouchwithjeremylynch.de@gb":"e","thisisbulgariahd.bg@sd":"x","thisoldhouse.us@sd":"e","threescompany.us@ca":"e","threescompany.us@sd":"e","thrill.hk@sd":"e","tigosports.bo@sd":"x","tigosports.cr@sd":"x","tigosports.gt@sd":"x","tigosports.hn@sd":"x","tigosports.py@sd":"x","tigosports.sv@sd":"x","tigosportsplus.py@sd":"x","tiljulefrokosthosr8dio.se@dk":"e","tintv.us@sd":"x","tinyhousenation.us@sd":"e","tjktv.tr@sd":"x","tjktv2.tr@sd":"x","tlnovelaslatinamerica.mx@sd":"x","tlnovelasmexico.mx@sd":"x","tmz.us@sd":"e","tnt.ru@hd":"x","tnt.ru@sd":"x","tnt4.ru@sd":"x","tnt4international.ru@sd":"x","tntinternational.ru@belarus":"x","tntinternational.ru@europe":"x","tntinternational.ru@sd":"x","tntnovelas.us@brazil":"x","tntnovelas.us@colombia":"x","tntnovelas.us@panregional":"x","tntserieslatinamerica.us@panregional":"x","tntserieslatinamerica.us@south":"x","todonovelas.es@sd":"x","tollytv.in@hd":"x","topcrime.it@sd":"x","topgear.uk@sd":"e","topsecret.ru@sd":"x","tosh0.us@sd":"e","totalcrime.ca@ca":"e","toughjobs.us@sd":"e","tourspottv.do@hd":"x","toutlemondedetestechris.de@fr":"f","tpluse.ca@sd":"e","tr24television.cm@sd":"f","tracesportstars.fr@hd":"f","tracesportstars.fr@russia":"x","tracesportstars.fr@sd":"e","travinhtv.vn@sd":"x","trsport.it@sd":"x","trtbelgesel.tr@sd":"e","trtspor.tr@sd":"x","trtsporyildiz.tr@sd":"x","truecrime.uk@sd":"e","truecrimebyplutotv.de@fr":"f","truecrimefranviaplay.se@se":"e","truecrimenetwork.us@sd":"e","truecrimenetwork.us@wcvbtv":"e","truefilm1.th@sd":"x","truefilm2.th@sd":"x","truefilmasia.th@sd":"x","truemoviehits.th@sd":"x","truetennis.th@sd":"x","truethaifilm.th@sd":"x","tshwanetv.za@sd":"e","tsn4.ca@sd":"e","tsntheocho.ca@sd":"e","tsports.bd@sd":"x","tsports7.th@sd":"x","turbo.de@fr":"f","turfmovil.cl@sd":"x","turismohd.do@hd":"e","turkmenistansport.tm@sd":"x","tv1000.bg@sd":"x","tv1000russiankinoglobal.ru@sd":"x","tv21.ru@sd":"x","tv21international.ru@sd":"x","tv3.ru@belarus":"x","tv3.ru@hd":"x","tv3.ru@sd":"x","tv3life.lv@sd":"x","tv8.md@sd":"x","tvbsasia.tw@sd":"x","tvcanalsur.do@sd":"x","tvcarib.sx@sd":"f","tvcaribcinema.sx@sd":"e","tvcariblatino.sx@sd":"x","tvcentro272hd.hn@sd":"x","tvcuatro43.mx@sd":"x","tvcuruca.br@sd":"x","tvdigitalbirigui.br@sd":"x","tvempire.br@sd":"x","tvera.mk@sd":"x","tvestar.es@hd":"x","tvestar.es@sd":"x","tvgolfouraba.co@sd":"x","tvgrandenatalhdtvbrasil.br@sd":"x","tvificcao.pt@sd":"x","tvireality.pt@sd":"x","tvitn.ir@sd":"x","tviyserial.ua@sd":"x","tvkaliente.pe@sd":"x","tvlanddrama.us@sd":"e","tvmaticfight.br@sd":"x","tvmax.pa@sd":"x","tvnasia.hk@hd":"e","tvnatal.br@sd":"x","tvnova.hr@sd":"x","tvoetv.ru@sd":"x","tvparaense.br@hd":"x","tvpluspet.br@sd":"x","tvpseriale.pl@sd":"x","tvpsport.pl@sd":"x","tvrisport.id@sd":"x","tvrsport.ro@sd":"x","tvrusplus.de@hd":"x","tvs.do@sd":"x","tvsbowlingnetwork.us@sd":"e","tvsboxing.us@sd":"e","tvsclassicsports.us@sd":"e","tvsdriveinmovie.us@sd":"e","tvseries.br@sd":"x","tvsfilmnoirnetwork.us@sd":"e","tvsflashbacknetwork.us@sd":"e","tvssports.us@sd":"e","tvssportsbureau.us@sd":"e","tvsturbo.us@sd":"e","tvsvintagenetwork.us@sd":"e","tvswomensports.us@sd":"e","tvtodayjanakpur.np@sd":"e","tvvicosa.br@sd":"x","tvvitoria.mz@sd":"x","tvzoom.br@sd":"x","twentyseven.it@hd":"x","tycsports.ar@sd":"x","tycsportsusa.ar@sd":"x","u.ru@sd":"x","ualibi.uk@sd":"e","ultracasanaretv.co@sd":"x","umatv.br@hd":"x","umsatvuinternacional.bo@hd":"x","unbeaten.us@sd":"e","undercoverbossglobal.us@uk":"e","ungamammor.se@no":"e","ungamammor.se@se":"e","unidentified.us@sd":"e","unifranz.bo@hd":"x","uniquetv.in@sd":"x","unite8sports2.in@sd":"e","universalcinema.us@sd":"e","universalcomedy.us@sd":"e","universalcrime.us@east":"e","universtv.es@sd":"x","univisiontlnovelas.us@sd":"x","unsolvedmysteries.us@uk":"e","unsolvedmysteries.us@us":"e","upltv.ua@sd":"x","usanetwork.us@east":"e","vacationchannel.il@sd":"x","vanithatv.in@sd":"x","varzeshtv.ir@sd":"x","vasanthtv.in@sd":"x","vatilao.la@sd":"x","vbmediatv.mx@sd":"x","velveteuropeanmovies.ru@hd":"x","velvetgoldencollection.ru@hd":"x","velvetmentovskiyeserialy.ru@hd":"x","velvetscary.ru@hd":"x","velvetserieshits.ru@hd":"x","velvetsovetskoekino.ru@hd":"x","velvetsvaty.ru@hd":"x","velvetworldseries.ru@hd":"x","vendhartv.in@sd":"x","veplus.ve@panregional":"x","veplus.ve@venezuela":"x","verginatv.gr@sd":"x","veronicadisneyjr.nl@sd":"x","vh1queensofreality.us@sd":"e","viafreemovies.se@dk":"e","viafreemovies.se@no":"e","viafreemovies.se@se":"e","viaplaytv.fi@sd":"x","viasatepicdrama.uk@czechia":"x","viasatepicdrama.uk@poland":"x","viasatepicdrama.uk@romania":"x","viasatepicdrama.uk@ukraine":"x","viasatexplore.bg@sd":"x","viasatexplore.cz@sd":"x","viasatexplore.ro@sd":"x","viasatexplore.se@sd":"e","viasatexplore.si@hd":"x","viasathistory.bg@sd":"x","viasathistory.cz@sd":"x","viasathistory.ro@sd":"x","viasathistory.se@sd":"e","viasathistory.si@hd":"x","viasathistory.tr@sd":"x","viasathistory.ua@sd":"x","viasatkino.ua@balkan":"e","viasatkino.ua@bulgaria":"x","viasatkino.ua@romania":"x","viasatkino.ua@sd":"e","viasatkinoaction.ua@sd":"e","viasatkinocomedy.ua@sd":"e","viasatkinoworld.ua@sd":"x","viasatnature.bg@sd":"x","viasatnature.cz@sd":"x","viasatnature.ro@sd":"x","viasatnature.se@sd":"e","viasatnature.si@sd":"x","viasatserial.ua@hd":"x","vijuexplore.ru@sd":"x","vijuhistory.ru@sd":"x","vijunature.ru@sd":"x","vijuplusmegahit.ru@hd":"x","vijuplusplanet.ru@hd":"x","vijupluspremiere.ru@hd":"x","vijuplusserial.ru@hd":"x","vijuplussport.ru@hd":"x","vijuplussport.ru@sd":"x","vijutv1000.ru@sd":"x","vijutv1000action.ru@sd":"x","vijutv1000novella.ru@hd":"x","vijutv1000romantica.ru@hd":"x","vijutv1000russkoe.ru@sd":"x","vinhlongtv2.vn@sd":"x","vinhlongtv3.vn@sd":"x","vinhlongtv4.vn@sd":"x","visionndv.do@sd":"x","vissatv.in@sd":"x","vitaldrive.ru@hd":"x","voprosyiotvety.ru@sd":"x","voyosport1.ro@hd":"x","vozdibonairetv.bq@sd":"x","vrtchannel.br@sd":"x","vsportgolf.se@sd":"x","vtv6.vn@hd":"x","w9.fr@sd":"f","walkertexasranger.us@france":"f","warnerchannel.us@colombia":"x","warnertv.cz@sd":"x","warnertvasia.us@sd":"e","watchitscream.us@sd":"e","waterbear.ch@sd":"e","wdr1live.de@sd":"x","wedobigstories.ch@sd":"e","weedsnursejackie.us@sd":"e","west.pe@sd":"x","wetv.us@east":"e","whiplashcinema.us@sd":"e","wildatheart.us@uk":"e","wildearth.za@sd":"e","wildfire.se@dk":"e","wildfire.se@no":"e","wildfire.se@se":"e","wildnout.us@sd":"e","willow.us@sd":"e","willowsports.us@sd":"e","winplusfutbol.co@sd":"x","winsports.co@sd":"x","wipeoutxtra.us@sd":"e","worldentertainmenttv42.th@sd":"x","worldoffreesports.de@sd":"x","worldpokertour.us@germany":"x","worldpokertour.us@poland":"e","worldpokertour.us@uk":"e","worldpokertour.us@us":"e","wtvcanal20.ni@sd":"x","wutangcollection.us@sd":"e","wwenetwork.us@sd":"e","wwontvchannel48.us@sd":"e","xfctv.us@sd":"e","xpertv.cr@sd":"x","xploretv.us@sd":"e","xptv2.es@sd":"e","xptvus.es@sd":"e","xtremaaccion.ar@sd":"x","xtremacineclasico.ar@sd":"x","xtrematerror.ar@sd":"x","yamtichoni.il@sd":"x","yaquelaveritequicompte.us@france":"f","yes.mv@sd":"x","yesmoviesaction.il@sd":"x","yettv.in@hd":"x","younghollywood.us@sd":"e","yourtimetv.ir@sd":"x","youtooamerica.us@kvvbld":"e","ytatv.us@sd":"e","yunavision.do@sd":"x","zaz.mx@sd":"x","zeeaction.in@sd":"x","zeebangla.in@hd":"x","zeebangla.in@sd":"x","zeebanglasonar.in@sd":"x","zeecinema.in@apac":"x","zeecinema.in@hd":"x","zeecinema.in@sd":"x","zeecinemalu.in@hd":"x","zeedilse.in@hd":"x","zeehorrornights.in@hd":"x","zeekannada.in@hd":"x","zeemarathi.in@hd":"x","zeeone.uk@french":"f","zeeone.uk@german":"x","zeeone.uk@uk":"e","zeesouthflix.in@hd":"x","zeetalkies.in@sd":"x","zeetamil.in@hd":"x","zeetelugu.in@hd":"x","zeetv.in@hd":"x","zeetv.in@sd":"x","zodiaktv.in@sd":"x","zonaplaytv.cl@sd":"x","zoom.ua@sd":"x","zortv.uz@sd":"x","zuglotv.hu@sd":"x"}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js" defer></script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const audio=$('#audio'), video=$('#video');
+const SERVERS=['https://de1.api.radio-browser.info','https://de2.api.radio-browser.info','https://fi1.api.radio-browser.info','https://nl1.api.radio-browser.info','https://at1.api.radio-browser.info'];
+const TV_SRC='https://raw.githubusercontent.com/iptv-org/iptv/master/streams/';
+const AFRIQUE_RADIO=['SN','CM','BF','ML','BJ','TG','GN','CD','GA','NE','CG','MA'];
+const AFRIQUE_TV=['sn','cm','bf','ml','bj','tg','cd','cg','gn','ne','ga','bi','rw','mg'];
+const PAYS={ci:"Côte d'Ivoire",sn:'Sénégal',cm:'Cameroun',bf:'Burkina Faso',ml:'Mali',bj:'Bénin',tg:'Togo',cd:'RD Congo',cg:'Congo',gn:'Guinée',ne:'Niger',ga:'Gabon',bi:'Burundi',rw:'Rwanda',mg:'Madagascar',fr:'France',
+  be:'Belgique',ch:'Suisse',ca:'Canada',lu:'Luxembourg',mc:'Monaco',ma:'Maroc',dz:'Algérie',tn:'Tunisie',ht:'Haïti',ng:'Nigeria',gh:'Ghana',za:'Afrique du Sud',ke:'Kenya',us:'États-Unis',uk:'Royaume-Uni',gb:'Royaume-Uni',ie:'Irlande',au:'Australie'};
+const CAT_SRC='https://raw.githubusercontent.com/iptv-org/iptv/gh-pages/categories/';
+// Langue de chaque chaîne des catégories (f = français, e = anglais), intégrée à l'appli
+let LANG={};try{LANG=JSON.parse(document.getElementById('langData').textContent)}catch(e){}
+// Secours pour les chaînes absentes de la liste : on se fie au pays
+const FRANCO=new Set(['ci','sn','cm','bf','ml','bj','tg','cd','cg','gn','ne','ga','bi','rw','mg','fr','be','ch','lu','mc','ht']);
+const ANGLO=new Set(['ng','gh','za','ke','us','uk','gb','ie','au']);
+const NOLLY=/nolly|naija|afri|wazobia/i;
+
+const MODES={
+  radio:{
+    tabs:[['ci',"Côte d'Ivoire"],['afrique','Afrique'],['france','France'],['sport','Sport'],['monde','Monde'],['fav','Favoris'],['recent','Récentes'],['mine','Mes radios']],
+    titles:{ci:"Radios de Côte d'Ivoire",sport:"Radios de sport",afrique:"Radios d'Afrique",france:"Radios de France",monde:"Les plus écoutées au monde",fav:"Mes radios favorites",recent:"Écoutées récemment",mine:"Mes radios ajoutées"},
+    one:'station',many:'stations',search:'Rechercher une radio (ex. Nostalgie, RFI, Fréquence 2)',
+    idleName:'Choisissez une station',idleMeta:"Touchez une radio dans la liste pour l'écouter",
+    foot:"Stations fournies par l'annuaire libre Radio Browser · © GJM Tecnologie",
+    mineEmpty:"Ajoutez la radio de votre paroisse, de votre ville ou de votre client avec le formulaire ci-dessus.",
+    form:['Nom de la radio','Ex. Radio paroissiale Saint Ignace','Adresse du flux (lien https du stream)','https://…/stream','Ajouter la radio']
+  },
+  tv:{
+    tabs:[['tnt','TNT'],['ci',"Côte d'Ivoire"],['afrique','Afrique'],['france','France & Info'],['sport','Sport'],['doc','Documentaires'],['series','Séries'],['films','Films & Nollywood'],['fav','Favoris'],['recent','Récentes'],['mine','Mes chaînes'],['adulte','18+']],
+    titles:{tnt:"TNT Côte d'Ivoire",ci:"Chaînes de Côte d'Ivoire",sport:"Chaînes de sport",doc:"Chaînes de documentaires",series:"Chaînes de séries et novelas",films:"Films et Nollywood",afrique:"Chaînes d'Afrique",france:"Chaînes de France et d'info",fav:"Mes chaînes favorites",recent:"Regardées récemment",mine:"Mes chaînes ajoutées",adulte:"18+ · espace privé"},
+    one:'chaîne',many:'chaînes',search:'Rechercher une chaîne (ex. RTI, France 24, Africa 24)',
+    idleName:'Choisissez une chaîne',idleMeta:'Touchez une chaîne dans la liste pour la regarder',
+    foot:"Chaînes gratuites diffusées publiquement sur internet (liste libre iptv-org) · © GJM Tecnologie",
+    mineEmpty:"Ajoutez la chaîne d'un client ou d'une paroisse avec le lien de son direct (.m3u8) dans le formulaire ci-dessus.",
+    form:['Nom de la chaîne','Ex. Télé paroissiale','Adresse du direct (lien https .m3u8)','https://…/index.m3u8','Ajouter la chaîne']
+  }
+};
+
+/* ---------- Stockage local (radio et télé séparés) ---------- */
+const store={
+  get(k,d){try{const v=localStorage.getItem('gjmradio_'+k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem('gjmradio_'+k,JSON.stringify(v))}catch(e){}}
+};
+const key=(m,k)=>m==='radio'?k:'tv_'+k;
+const D={};
+for(const m of ['radio','tv'])D[m]={favs:store.get(key(m,'favs'),[]),recents:store.get(key(m,'recents'),[]),mine:store.get(key(m,'mine'),[]),tab:store.get(key(m,'tab'),m==='tv'?'tnt':'ci'),last:store.get(key(m,'last'),null)};
+function save(k){store.set(key(mode,k),D[mode][k])}
+D.tv.adult=store.get('tv_adult',[]);
+let mode=store.get('mode','radio'); if(!MODES[mode])mode='radio';
+let retries=0, everPlayed=false;
+let list=[], cache={radio:{},tv:{}}, hls=null, wantPlay=false, playMode=null, current=null, attempt=0, sleepEnd=0, sleepTimer=null, searchTimer=null;
+const cfg=()=>MODES[mode], st=()=>D[mode];
+const media=()=>playMode==='tv'?video:audio;
+
+/* ---------- Utilitaires ---------- */
+function toast(t){const el=$('#toast');el.textContent=t;el.hidden=false;clearTimeout(el._t);el._t=setTimeout(()=>el.hidden=true,3200)}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function initials(n){return (n||'?').replace(/[^\p{L}\p{N} ]/gu,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'TV'}
+function fmOf(s){if(s.fm)return parseFloat(String(s.fm).replace(',','.'));if(s.urls)return null;const m=(s.name||'').match(/\b(8[7-9]|9\d|10[0-8])[.,](\d)\b/);return m?parseFloat(m[1]+'.'+m[2]):null}
+function hash(s){let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))|0;return Math.abs(h)}
+function isFav(id){return st().favs.some(f=>f.id===id)}
+async function getJSON(url,ms=9000){
+  const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),ms);
+  try{const r=await fetch(url,{signal:ctrl.signal});if(!r.ok)throw 0;return r}finally{clearTimeout(t)}
+}
+
+/* ---------- Radios : annuaire Radio Browser ---------- */
+async function api(path){
+  for(const s of [...SERVERS].sort(()=>Math.random()-.5)){
+    try{return await (await getJSON(s+path)).json()}catch(e){}
+  }
+  throw new Error('reseau');
+}
+function normRadio(s){
+  const url=s.url_resolved||s.url||'';
+  return {id:s.stationuuid,name:(s.name||'').trim(),url,favicon:s.favicon||'',
+    tags:(s.tags||'').split(',').filter(Boolean).slice(0,3).join(' · '),
+    country:s.country||'',bitrate:s.bitrate||0,hls:!!s.hls||/\.m3u8/i.test(url)};
+}
+// Filtre de sécurité : aucun contenu pour adultes (nom, catégorie ou étiquettes)
+const ADULT=/(\bxxx|porn|\bsex|erot|\badult|hustler|playboy|brazzers|dorcel|penthouse|red ?light|nsfw|18 ?\+|\+ ?18\b|hentai)/i;
+function cleanRadio(arr){
+  const seen=new Set();
+  return arr.filter(s=>!ADULT.test((s.name||'')+' '+(s.tags||''))).map(normRadio).filter(s=>{const k=s.name.toLowerCase();if(!s.url||!s.name||seen.has(k))return false;seen.add(k);return true})
+    .sort((a,b)=>(b.url.startsWith('https')?1:0)-(a.url.startsWith('https')?1:0));
+}
+const Q='hidebroken=true&order=clickcount&reverse=true';
+async function loadRadio(t){
+  let raw;
+  if(t==='ci')raw=await api(`/json/stations/search?countrycode=CI&${Q}&limit=150`);
+  else if(t==='france')raw=await api(`/json/stations/search?countrycode=FR&${Q}&limit=100`);
+  else if(t==='monde')raw=await api(`/json/stations/search?${Q}&limit=100`);
+  else if(t==='sport'){
+    const parts=await Promise.allSettled([api(`/json/stations/search?tag=sport&language=french&${Q}&limit=60`),api(`/json/stations/search?tag=sports&${Q}&limit=40`)]);
+    raw=parts.flatMap(p=>p.status==='fulfilled'?p.value:[]);
+    if(!raw.length)throw new Error('reseau');
+  }
+  else if(t==='afrique'){
+    const parts=await Promise.allSettled(AFRIQUE_RADIO.map(c=>api(`/json/stations/search?countrycode=${c}&${Q}&limit=12`)));
+    raw=parts.flatMap(p=>p.status==='fulfilled'?p.value:[]).sort((a,b)=>b.clickcount-a.clickcount);
+    if(!raw.length)throw new Error('reseau');
+  }
+  return cleanRadio(raw);
+}
+
+/* ---------- Télé : listes publiques iptv-org ---------- */
+function parseM3U(txt,cc0){
+  const lines=txt.split(/\r?\n/), map=new Map();
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i];if(!l.startsWith('#EXTINF'))continue;
+    let j=i+1,opts=false;
+    while(j<lines.length&&lines[j].startsWith('#')){opts=true;j++}
+    const url=(lines[j]||'').trim();i=j;
+    if(opts||!url.startsWith('https://'))continue;           // liens non sécurisés ou à options : illisibles dans un navigateur
+    const raw=l.slice(l.lastIndexOf(',')+1).trim();
+    if(/geo-blocked/i.test(raw))continue;                   // bloquées hors de leur pays
+    const grp=(l.match(/group-title="([^"]*)"/)||[])[1]||'', tid0=(l.match(/tvg-id="([^"]*)"/)||[])[1]||'';
+    if(ADULT.test(raw)||ADULT.test(grp)||/\.xxx|xxx\./i.test(tid0))continue; // aucun contenu pour adultes
+    const part=/not 24\/7/i.test(raw);
+    const q=(raw.match(/\((\d{3,4}p)\)/)||[])[1]||'';
+    const name=raw.replace(/\s*\[[^\]]*\]/g,'').replace(/\s*\(\d{3,4}p\)/,'').trim();
+    const tid=(l.match(/tvg-id="([^"]*)"/)||[])[1]||'';
+    const logo=(l.match(/tvg-logo="([^"]*)"/)||[])[1]||'';
+    const cc=cc0||((tid.match(/\.([a-z]{2})(@|$)/i)||[])[1]||'').toLowerCase();
+    const k=(tid||name).toLowerCase();
+    if(!map.has(k))map.set(k,{id:'tv-'+cc+'-'+k,name,urls:[],favicon:logo,q,part,cc,tid:tid.toLowerCase(),country:PAYS[cc]||cc.toUpperCase()});
+    const c=map.get(k);c.urls.push(url);if(!part)c.part=false;
+    if(parseInt(q)>parseInt(c.q||0))c.q=q;
+  }
+  return [...map.values()];
+}
+async function m3u(cc){
+  if(cache.tv['cc_'+cc])return cache.tv['cc_'+cc];
+  const r=await getJSON(TV_SRC+cc+'.m3u',20000);
+  return cache.tv['cc_'+cc]=parseM3U(await r.text(),cc);
+}
+const TV_TOP=/^(rti|la 3|nci|france 24|tv5|africa ?24|africanews|franceinfo|lci|bfm)/i;
+async function cat(name){
+  if(cache.tv['cat_'+name])return cache.tv['cat_'+name];
+  const r=await getJSON(CAT_SRC+name+'.m3u',30000);
+  return cache.tv['cat_'+name]=parseM3U(await r.text(),null);
+}
+// Chaînes d'une catégorie : en français d'abord, puis en anglais. Les autres langues sont écartées.
+const rank=s=>{const l=LANG[s.tid];if(l)return l==='f'?0:l==='e'?1:9;return FRANCO.has(s.cc)?0:ANGLO.has(s.cc)?1:9};
+async function byLang(arr,boost){
+  const b=s=>boost&&boost.test(s.name)?0:1;
+  const out=arr.filter(s=>rank(s)<9||!b(s))
+    .sort((x,y)=>(b(x)-b(y))||(rank(x)-rank(y))||(x.part-y.part)||x.name.localeCompare(y.name,'fr'));
+  return out.slice(0,180);
+}
+/* TNT ivoirienne : les 7 chaînes officielles. Direct dans l'appli quand un flux public existe,
+   sinon bouton vers le direct officiel (RTI Play, nci.ci), sinon explication. */
+const RTIPLAY='https://rtiplay.ci/';
+const TNT=[
+  {n:1,name:'RTI 1',re:/^rti ?1$/i,link:RTIPLAY,via:'RTI Play'},
+  {n:2,name:'RTI 2',re:/^rti ?2$/i,link:RTIPLAY,via:'RTI Play'},
+  {n:3,name:'La 3',re:/^(la ?3|rti ?3)$/i,link:RTIPLAY,via:'RTI Play'},
+  {n:4,name:'NCI',re:/^nci\b/i,link:'https://www.nci.ci/',via:'nci.ci'},
+  {n:5,name:'A+ Ivoire',re:/^a\+ ?ivoire/i,info:"A+ Ivoire n'a pas de direct gratuit officiel sur internet. Elle se regarde sur la TNT (canal 5) et dans le bouquet Canal+."},
+  {n:6,name:'Life TV',re:/^life ?tv/i,info:"Life TV n'a pas de direct gratuit officiel sur internet. Elle se regarde sur la TNT (canal 6) et dans l'offre TV d'Orange."},
+  {n:7,name:'7 Info',re:/^7 ?info/i}
+];
+async function loadTnt(){
+  let ci=[];try{ci=await m3u('ci')}catch(e){}
+  return TNT.map(t=>{
+    const s=ci.find(c=>t.re.test(c.name));
+    return {...(s||{urls:[],q:'',part:false,favicon:''}),id:s?s.id:'tnt-'+t.n,name:t.name,tnt:t.n,link:t.link||'',via:t.via||'',info:t.info||'',country:'TNT canal '+t.n};
+  });
+}
+async function loadTv(t){
+  let out;
+  if(t==='tnt')return loadTnt();
+  if(t==='sport')return byLang(await cat('sports'));
+  if(t==='doc')return byLang(await cat('documentary'));
+  if(t==='series')return byLang(await cat('series'));
+  if(t==='films'){
+    const parts=await Promise.allSettled([cat('movies'),cat('series'),cat('entertainment')]);
+    const seen=new Set(),all=[];
+    for(const p of parts)if(p.status==='fulfilled')for(const s of p.value){
+      // séries : seulement les chaînes Nollywood / africaines, pour ne pas doubler l'onglet Séries
+      if(p===parts[0]||NOLLY.test(s.name)){if(!seen.has(s.id)){seen.add(s.id);all.push(s)}}
+    }
+    if(!all.length)throw new Error('reseau');
+    return byLang(all,/nolly|naija|wazobia|african movie|afrikan movie/i);
+  }
+  if(t==='ci')out=await m3u('ci');
+  else if(t==='france')out=await m3u('fr');
+  else if(t==='afrique'){
+    const parts=await Promise.allSettled(AFRIQUE_TV.map(m3u));
+    out=parts.flatMap(p=>p.status==='fulfilled'?p.value:[]);
+    if(!out.length)throw new Error('reseau');
+  }
+  // Les grandes chaînes d'info et nationales en tête, puis celles qui émettent 24h/24
+  return [...out].sort((a,b)=>(TV_TOP.test(b.name)-TV_TOP.test(a.name))||(a.part-b.part)||a.name.localeCompare(b.name,'fr'));
+}
+
+async function load(t){
+  const s=st();
+  if(t==='fav')return s.favs;
+  if(t==='recent')return s.recents;
+  if(t==='mine')return s.mine;
+  if(cache[mode][t])return cache[mode][t];
+  return cache[mode][t]=await (mode==='tv'?loadTv(t):loadRadio(t));
+}
+
+/* ---------- Vérification des chaînes télé ----------
+   Chaque lien est testé depuis le téléphone (le direct répond-il ?). Résultat gardé 6 h (2 h si en panne). */
+const H_OK=6*3600e3,H_BAD=2*3600e3;
+let health={};
+try{const h0=store.get('health',{}),now=Date.now();for(const u in h0)if(now-h0[u].t<(h0[u].ok?H_OK:H_BAD))health[u]=h0[u]}catch(e){}
+let hTimer=null;
+function hGet(u){const x=health[u];if(!x)return null;return Date.now()-x.t<(x.ok?H_OK:H_BAD)?x.ok:null}
+function hSet(u,ok){health[u]={ok,t:Date.now()};clearTimeout(hTimer);hTimer=setTimeout(()=>store.set('health',health),1500)}
+const probing=new Map();
+function probe(u){
+  const c=hGet(u);if(c!==null)return Promise.resolve(c);
+  if(probing.has(u))return probing.get(u);
+  const p=(async()=>{
+    const ctrl=new AbortController(),tm=setTimeout(()=>ctrl.abort(),9000);
+    try{
+      const r=await fetch(u,{signal:ctrl.signal,cache:'no-store'});
+      if(!r.ok)return false;
+      if(!/\.m3u8/i.test(u)){ctrl.abort();return true}
+      const tx=(await r.text()).slice(0,3000);
+      return tx.includes('#EXT');
+    }catch(e){return false}finally{clearTimeout(tm)}
+  })().then(ok=>{hSet(u,ok);probing.delete(u);return ok});
+  probing.set(u,p);return p;
+}
+function chState(s){
+  if(!s.urls||!s.urls.length)return 'ok';                 // radio, ou chaîne TNT avec lien officiel
+  let unk=false;
+  for(const u of s.urls){const v=hGet(u);if(v===true)return 'ok';if(v===null)unk=true}
+  return unk?'unknown':'bad';
+}
+async function checkCh(s){
+  for(const u of s.urls){if(await probe(u)){s.urls=[u,...s.urls.filter(x=>x!==u)];return true}}
+  return false;
+}
+let viewToken=0;
+// Affiche seulement les chaînes qui répondent ; les autres sont testées en arrière-plan
+function visibleOf(all){
+  const out=[];
+  for(const s of all){
+    const stt=chState(s);
+    if(stt==='ok')out.push(s);
+    else if(stt==='bad'&&s.tnt)out.push({...s,urls:[],info:s.info||`Le direct de ${s.name} est hors service pour le moment.`});
+  }
+  return out;
+}
+async function showVerified(all,token,emptyMsg){
+  const todo=all.filter(s=>chState(s)==='unknown');
+  let done=0,timer=null;
+  const paint=()=>{
+    if(token!==viewToken)return;
+    list=visibleOf(all);
+    const checking=done<todo.length;
+    render(checking?'Test des chaînes en cours…':emptyMsg);
+    if(checking)$('#listCount').textContent=`${list.length} en marche · test ${done}/${todo.length}`;
+  };
+  paint();
+  if(!todo.length)return;
+  let i=0;
+  const worker=async()=>{while(i<todo.length&&token===viewToken){const s=todo[i++];await checkCh(s);done++;if(!timer)timer=setTimeout(()=>{timer=null;paint()},400)}};
+  await Promise.all(Array.from({length:6},worker));
+  clearTimeout(timer);paint();
+}
+
+/* ---------- Qualité vidéo ----------
+   'auto' = selon la connexion. Un nombre (ex. 480) = jamais au-dessus de cette qualité (économise les données). */
+let prefQ=store.get('quality','auto');
+const QSTEPS=[[360,'Économie'],[480,'Moyenne'],[720,'HD'],[1080,'Full HD']];
+function levelsOf(){return hls&&hls.levels?hls.levels.map((l,i)=>({i,h:l.height||0})):[]}
+function applyQuality(){
+  const L=levelsOf();if(L.length<2)return;
+  if(prefQ==='auto'){hls.autoLevelCapping=-1;hls.currentLevel=-1;return}
+  const ok=L.filter(l=>l.h&&l.h<=prefQ).sort((a,b)=>b.h-a.h);
+  const pick=ok.length?ok[0]:L.reduce((a,b)=>a.h&&a.h<b.h?a:b);   // sinon la plus basse disponible
+  hls.autoLevelCapping=pick.i;hls.nextLevel=pick.i;
+}
+function curHeight(){const L=levelsOf();if(!L.length)return video.videoHeight||0;const i=hls.currentLevel>=0?hls.currentLevel:hls.loadLevel;return (L[i]||{}).h||video.videoHeight||0}
+function updateQBtn(){
+  const b=$('#qBtn');b.hidden=mode!=='tv';
+  const h=curHeight(),lbl=prefQ==='auto'?'Auto':'≤ '+prefQ+'p';
+  b.textContent='Qualité : '+lbl+(h&&playMode==='tv'&&wantPlay?' · '+h+'p':'');
+  if(!$('#qMenu').hidden)renderQMenu();
+}
+function renderQMenu(){
+  const L=levelsOf(),hs=[...new Set(L.map(l=>l.h).filter(Boolean))].sort((a,b)=>a-b);
+  let note;
+  if(!current||playMode!=='tv'||!wantPlay)note="Votre choix s'appliquera à toutes les chaînes.";
+  else if(!hls)note="Ce téléphone choisit lui-même la qualité pour cette chaîne.";
+  else if(hs.length<2)note=`Cette chaîne n'existe qu'en une seule qualité${hs[0]?' ('+hs[0]+'p)':''}.`;
+  else note='Qualités disponibles pour cette chaîne : '+hs.map(x=>x+'p').join(', ')+'.';
+  const opts=[['auto','Auto (selon la connexion)'],...QSTEPS.map(([v,n])=>[v,`${n} · ${v}p`])];
+  $('#qMenu').innerHTML=`<div class="qopts">${opts.map(([v,n])=>`<button data-q="${v}" aria-pressed="${String(prefQ)===String(v)}">${n}</button>`).join('')}</div><p>${note} « Économie » consomme environ 3 fois moins de données que « HD ».</p>`;
+}
+
+/* ---------- Programmes (fichier programme.json, heures d'Abidjan = GMT) ---------- */
+let PROG={tele:{},radio:{}};
+const JOURS=['dim','lun','mar','mer','jeu','ven','sam'];
+const JOURS_L=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+const pkey=n=>String(n||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const toMin=t=>{const [a,b]=String(t).split(/[:h]/);return (+a)*60+(+b||0)};
+function dayMatch(j,d){
+  j=String(j||'tous').toLowerCase().replace(/\s/g,'');
+  if(j==='tous')return true;
+  return j.split(',').some(p=>{
+    const r=p.split('-');
+    if(r.length===2){const a=JOURS.indexOf(r[0]),b=JOURS.indexOf(r[1]);if(a<0||b<0)return false;return a<=b?d>=a&&d<=b:d>=a||d<=b}
+    return JOURS.indexOf(p)===d;
+  });
+}
+function gridOf(s,m){
+  if(!s)return null;const g=PROG[(m||mode)==='tv'?'tele':'radio']||{};
+  const k=pkey(s.name);
+  for(const name in g)if(pkey(name)===k)return g[name];
+  return null;
+}
+function slots(s,d,m){
+  const g=gridOf(s,m);if(!g)return null;
+  return g.filter(x=>dayMatch(x.jours,d)).map(x=>{const a=toMin(x.debut);let b=x.fin?toMin(x.fin):a+30;if(b<=a)b+=1440;return {...x,a,b}}).sort((x,y)=>x.a-y.a);
+}
+function clock(){const n=new Date();return {d:n.getUTCDay(),m:n.getUTCHours()*60+n.getUTCMinutes()}}
+function nowNext(s,m){
+  const {d,m:t}=clock(),today=slots(s,d,m);if(!today)return null;
+  const yest=(slots(s,(d+6)%7,m)||[]).filter(x=>x.b>1440&&t<x.b-1440);
+  const cur=yest[0]||today.find(x=>x.a<=t&&t<x.b)||null;
+  let next=today.find(x=>x.a>t);
+  if(!next)for(let i=1;i<=7&&!next;i++){const l=slots(s,(d+i)%7,m);if(l&&l.length)next={...l[0],jour:i===1?'demain':JOURS_L[(d+i)%7].toLowerCase()}}
+  return {cur,next};
+}
+const hhmm=x=>String(x.debut).replace('h',':');
+function updateProgNow(){
+  const s=current&&playMode===mode?current:st().last,el=$('#progNow'),nn=nowNext(s);
+  if(!nn||(!nn.cur&&!nn.next)){el.hidden=true}
+  else{
+    el.hidden=false;
+    el.innerHTML=(nn.cur?`<b>● ${esc(nn.cur.titre)}</b>`:'')+(nn.cur&&nn.next?' · ':'')+(nn.next?`Ensuite ${nn.next.jour?nn.next.jour+' ':''}${esc(hhmm(nn.next))} : ${esc(nn.next.titre)}`:'');
+  }
+  if(!$('#progPanel').hidden)renderProg();
+}
+let progDay=null;
+function renderProg(){
+  const s=current&&playMode===mode?current:st().last,{d,m:t}=clock();
+  if(progDay===null)progDay=d;
+  $('#progDays').innerHTML=[0,1,2,3,4,5,6].map(i=>{const dd=(d+i)%7;return `<button data-day="${dd}" aria-pressed="${dd===progDay}">${i===0?"Aujourd'hui":i===1?'Demain':JOURS_L[dd]}</button>`}).join('');
+  const l=s?slots(s,progDay):null,ul=$('#progList');
+  if(!s){ul.innerHTML=`<li class="prog-empty">Choisissez d'abord une ${cfg().one}.</li>`;return}
+  if(!l||!l.length){ul.innerHTML=`<li class="prog-empty">${l?'Pas de programme ce jour-là pour '+esc(s.name)+'.':'Programme non disponible pour '+esc(s.name)+'.'}</li>`;return}
+  const fmt=x=>{const f=x.b%1440;return hhmm(x)+'–'+String(Math.floor(f/60)).padStart(2,'0')+':'+String(f%60).padStart(2,'0')};
+  ul.innerHTML=l.map(x=>{const on=progDay===d&&x.a<=t&&t<x.b,past=progDay===d&&x.b<=t;
+    return `<li class="${on?'on':past?'past':''}"><time>${fmt(x)}</time><span class="t">${esc(x.titre)}${x.info?`<small>${esc(x.info)}</small>`:''}</span></li>`}).join('');
+}
+async function loadProg(){
+  try{const r=await fetch('programme.json',{cache:'no-cache'});if(r.ok){const j=await r.json();PROG={tele:j.tele||{},radio:j.radio||{}};updateProgNow();if(list.length)render()}}catch(e){}
+}
+
+/* ---------- Cadran FM ---------- */
+(function buildScale(){
+  let h='';for(let f=88;f<=108;f+=1){const big=f%4===0;h+=`<span class="tick${big?' big':''}"${big?` data-f="${f}"`:''}></span>`}
+  $('#scale').innerHTML=h;
+})();
+function setDial(s){
+  const fm=s?fmOf(s):null;
+  const v=fm??(s?88+(hash(s.name)%200)/10:98);
+  const pct=Math.min(100,Math.max(0,((v-88)/20)*100));
+  $('#needle').style.left=`calc(14px + (100% - 28px) * ${pct/100})`;
+  $('#freq').textContent=fm?fm.toFixed(1)+' MHz':(s?'WEB':'MHz');
+}
+
+/* ---------- Affichage ---------- */
+function logoHTML(s,id){
+  const ini=esc(initials(s.name)), idA=id?` id="${id}"`:'';
+  if(!s.favicon)return `<div class="logo"${idA}>${ini}</div>`;
+  const src=s.favicon.replace(/^http:/,'https:');
+  return `<div class="logo"${idA} data-ini="${ini}"><img src="${esc(src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.textContent=this.parentNode.dataset.ini"></div>`;
+}
+function subOf(s){
+  const nn=nowNext(s),live=nn&&nn.cur?`<span class="st-now">● ${esc(nn.cur.titre)}</span>`:'';
+  if(live)return [live,esc(s.country||s.tags)].filter(Boolean).join(' · ');
+  if(s.tnt){
+    const how=s.urls&&s.urls.length?'Direct dans l\'appli'+(s.link?' · aussi sur '+esc(s.via):''):s.link?'Direct sur '+esc(s.via):'Pas de direct internet';
+    return `<span class="st-fm">TNT ${s.tnt}</span> · ${how}`;
+  }
+  if(s.urls)return [s.q?`<span class="st-fm">${esc(s.q)}</span>`:'',esc(s.country),s.part?'Pas 24h/24':'',s.urls.length>1?s.urls.length+' liens':''].filter(Boolean).join(' · ');
+  const fm=fmOf(s);
+  return [fm?`<span class="st-fm">${fm.toFixed(1)} FM</span>`:'',esc(s.tags||s.country),s.bitrate?s.bitrate+' kbps':''].filter(Boolean).join(' · ');
+}
+const STAR='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.3l-6.2 3.7 1.7-7L2 9.2l7.1-.6L12 2l2.9 6.6 7.1.6-5.5 4.8 1.7 7z"/></svg>';
+function render(note){
+  const ul=$('#list'),c=cfg(),tab=st().tab;
+  $('#listCount').textContent=list.length?list.length+' '+(list.length>1?c.many:c.one):'';
+  if(!list.length){
+    const msg=note||{fav:"Aucun favori pour l'instant.<br>Touchez l'étoile à côté d'une "+c.one+" pour la garder ici.",
+      recent:"Les "+c.many+" que vous ouvrez apparaîtront ici.",mine:c.mineEmpty}[tab]||"Aucune "+c.one+" trouvée.";
+    ul.innerHTML=`<li class="empty">${msg}</li>`;return;
+  }
+  ul.innerHTML=list.map((s,i)=>`<li class="st${current&&current.id===s.id?' cur':''}" data-i="${i}">
+      <button class="st-main" data-play="${i}">${logoHTML(s)}<span class="st-txt"><div class="st-name">${esc(s.name)}</div><div class="st-sub">${subOf(s)||'&nbsp;'}</div></span></button>
+      ${tab==='mine'||tab==='adulte'?`<button class="del" data-del="${i}">Supprimer</button>`:''}
+      <button ${tab==='adulte'?'hidden ':''}class="star${isFav(s.id)?' on':''}" data-fav="${i}" aria-label="Favori">${STAR}</button></li>`).join('');
+}
+function skeleton(){$('#list').innerHTML=Array(6).fill('<li class="skel"></li>').join('');$('#listCount').textContent=''}
+function renderTabs(){
+  $('#tabs').innerHTML=cfg().tabs.map(([k,l])=>`<button class="tab" role="tab" data-tab="${k}" aria-selected="${k===st().tab}">${l}</button>`).join('');
+}
+
+/* ---------- Espace 18+ privé : verrouillé par un code, liens ajoutés par l'utilisateur ---------- */
+let adultOpen=false,adultAll=false,adultTimer=null,wipeArmed=false;
+async function sha(t){
+  try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('gjm-radio:'+t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+  catch(e){let h=0;for(const c of 'gjm:'+t)h=(h*31+c.charCodeAt(0))|0;return 'x'+h}
+}
+function lockAdult(){adultOpen=false;adultAll=false;clearTimeout(adultTimer);
+  if(current&&current.adult){pause();current=null;showNow(st().last)}if(mode==='tv'&&st().tab==='adulte')showTab('adulte')}
+function armAdultTimer(){clearTimeout(adultTimer);adultTimer=setTimeout(lockAdult,15*60e3)}
+function renderLock(){
+  const hasPin=!!store.get('tv_pin',null);
+  $('#listCount').textContent='';list=[];
+  $('#list').innerHTML=`<li class="empty"><form class="lock" id="lockForm" autocomplete="off">
+    ${hasPin?`<p>Espace privé verrouillé. Entrez votre code.</p>
+      <input type="password" id="pin1" inputmode="numeric" maxlength="8" placeholder="••••" aria-label="Code" required>
+      <button class="btn-gold" type="submit">Ouvrir</button>
+      <button class="linkbtn${wipeArmed?' danger':''}" type="button" id="pinForgot">${wipeArmed?"Confirmer : effacer le code et tous les liens 18+":"Code oublié ? Tout effacer"}</button>`
+    :`<p>Espace privé réservé aux adultes. Vous y ajoutez vous-même vos liens. Créez un code de 4 chiffres ou plus pour le protéger.</p>
+      <input type="password" id="pin1" inputmode="numeric" maxlength="8" placeholder="Nouveau code" aria-label="Nouveau code" required>
+      <input type="password" id="pin2" inputmode="numeric" maxlength="8" placeholder="Répéter le code" aria-label="Répéter le code" required>
+      <label><input type="checkbox" id="pinAge" required> J'ai 18 ans ou plus</label>
+      <button class="btn-gold" type="submit">Créer le code</button>`}
+  </form></li>`;
+}
+$('#list').addEventListener('submit',async e=>{
+  if(e.target.id!=='lockForm')return;
+  e.preventDefault();
+  const p1=$('#pin1').value.trim(),saved=store.get('tv_pin',null);
+  if(!/^\d{4,8}$/.test(p1)){toast('Le code doit contenir 4 à 8 chiffres');return}
+  if(!saved){
+    if(p1!==$('#pin2').value.trim()){toast('Les deux codes sont différents');return}
+    store.set('tv_pin',await sha(p1));toast('Code créé');
+  }else if(await sha(p1)!==saved){toast('Code incorrect');$('#pin1').value='';return}
+  adultOpen=true;wipeArmed=false;armAdultTimer();showTab('adulte');
+});
+$('#list').addEventListener('click',e=>{
+  if(e.target.id!=='pinForgot')return;
+  if(!wipeArmed){wipeArmed=true;renderLock();return}
+  store.set('tv_pin',null);D.tv.adult=[];store.set('tv_adult',[]);wipeArmed=false;toast('Code et liens 18+ effacés');renderLock();
+});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)lockAdult()});
+
+async function showTab(t){
+  const m=mode,tok=++viewToken;st().tab=t;save('tab');
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
+  const adultTab=t==='adulte';
+  if(!adultTab&&adultOpen){adultOpen=false;adultAll=false;clearTimeout(adultTimer)}
+  $('#addForm').hidden=!(t==='mine'||(adultTab&&adultOpen));
+  $('#adultBar').hidden=!(adultTab&&adultOpen);
+  document.querySelector('.search').hidden=adultTab;
+  $('#adultAll').classList.toggle('on',adultAll);
+  if(adultTab&&!adultOpen){$('#q').value='';$('#listTitle').textContent=cfg().titles[t];renderLock();return}
+  if(adultTab){
+    $('#q').value='';$('#listTitle').textContent=cfg().titles[t];armAdultTimer();
+    if(adultAll){list=D.tv.adult;render()}
+    else showVerified(D.tv.adult,tok,D.tv.adult.length?"Aucun de vos liens ne répond pour le moment. Touchez « Afficher aussi les liens en panne » pour les gérer.":"Ajoutez vos liens avec le formulaire ci-dessus (lien https qui finit souvent par .m3u8).");
+    return;
+  }
+  $('#q').value='';
+  $('#listTitle').textContent=cfg().titles[t];
+  if(!['fav','recent','mine'].includes(t)&&!cache[m][t])skeleton();
+  try{
+    const l=await load(t);
+    if(tok!==viewToken)return;
+    if(m==='tv'&&!['fav','recent','mine'].includes(t))showVerified(l,tok,"Aucune chaîne de cette liste ne répond pour le moment. Réessayez plus tard.");
+    else{list=l;render()}
+  }
+  catch(e){if(mode===m&&st().tab===t){list=[];$('#list').innerHTML=`<li class="empty">Impossible de charger la liste.<br>Vérifiez votre connexion internet puis touchez à nouveau l'onglet.<br>Vos favoris restent disponibles.</li>`}}
+}
+async function doSearch(q){
+  if(!q){showTab(st().tab);return}
+  const m=mode,tok=++viewToken;
+  $('#listTitle').textContent=`Résultats pour « ${q} »`;skeleton();
+  try{
+    let res;
+    if(m==='radio')res=cleanRadio(await api(`/json/stations/search?name=${encodeURIComponent(q)}&${Q}&limit=80`));
+    else{
+      const parts=await Promise.allSettled(['tnt','ci','afrique','france','sport','doc','series','films'].map(t=>cache.tv[t]?Promise.resolve(cache.tv[t]):loadTv(t).then(l=>cache.tv[t]=l)));
+      const all=[...parts.flatMap(p=>p.status==='fulfilled'?p.value:[]),...D.tv.mine];
+      const n=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+      const seen=new Set();res=all.filter(s=>n(s.name).includes(n(q))&&!seen.has(s.id)&&seen.add(s.id));
+    }
+    if($('#q').value.trim()!==q||mode!==m||tok!==viewToken)return;
+    if(m==='tv')showVerified(res,tok,'Aucune chaîne en marche ne correspond à cette recherche.');
+    else{list=res;render()}
+  }catch(e){$('#list').innerHTML=`<li class="empty">Recherche impossible sans connexion internet.</li>`}
+}
+
+/* ---------- Lecture ---------- */
+function setStatus(kind,txt){
+  $('#status').className='status '+(kind||'');$('#statusTxt').textContent=txt;
+  $('#set').classList.toggle('playing',kind==='live');
+  const busy=kind==='live'||kind==='load';
+  $('#playIcon').innerHTML=busy?'<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>':'<path d="M8 5v14l11-7z"/>';
+  $('#play').setAttribute('aria-label',busy?'Pause':'Lecture');
+  if(mode==='tv')$('#tvIdle').hidden=kind==='live';
+  updateQBtn();
+}
+function showNow(s){
+  const c=cfg();
+  if(!s){
+    $('#nowName').textContent=c.idleName;$('#nowMeta').textContent=c.idleMeta;
+    $('#nowLogo').outerHTML='<div class="logo" id="nowLogo"><img src="logo.png" alt=""></div>';
+    $('#favNow').classList.remove('on');setDial(null);setStatus('','Prêt');progDay=null;updateProgNow();return;
+  }
+  $('#nowName').textContent=s.name;
+  $('#nowMeta').textContent=s.urls?[s.q,s.country,s.part?'Pas 24h/24':''].filter(Boolean).join(' · ')||'Télé en direct'
+    :[s.tags,s.country,s.bitrate?s.bitrate+' kbps':''].filter(Boolean).join(' · ')||'Radio en direct';
+  $('#nowLogo').outerHTML=logoHTML(s,'nowLogo');
+  $('#favNow').classList.toggle('on',isFav(s.id));
+  if(mode==='radio')setDial(s);
+  progDay=null;updateProgNow();
+}
+function stopEngine(){
+  if(hls){hls.destroy();hls=null}
+  for(const m of [audio,video]){m.pause();if(m.getAttribute('src')){m.removeAttribute('src');m.load()}}
+}
+function fixUrl(u){return location.protocol==='https:'&&u.startsWith('http:')?'https:'+u.slice(5):u}
+function startUrl(){
+  const s=current,m=media(),urls=s.urls||[s.url];
+  const url=fixUrl(urls[attempt]);
+  const isHls=/\.m3u8/i.test(url)||s.hls;
+  if(isHls&&!m.canPlayType('application/vnd.apple.mpegurl')&&window.Hls&&Hls.isSupported()){
+    hls=new Hls({maxBufferLength:20,manifestLoadingTimeOut:12000});
+    hls.loadSource(url);hls.attachMedia(m);
+    hls.on(Hls.Events.MANIFEST_PARSED,()=>{applyQuality();updateQBtn()});
+    hls.on(Hls.Events.LEVEL_SWITCHED,updateQBtn);
+    hls.on(Hls.Events.ERROR,(e,d)=>{
+      if(!d.fatal)return;
+      // coupure en cours de lecture : on tente de reprendre avant de passer au lien suivant
+      if(d.type===Hls.ErrorTypes.MEDIA_ERROR&&retries<2){retries++;hls.recoverMediaError();return}
+      if(d.type===Hls.ErrorTypes.NETWORK_ERROR&&everPlayed&&retries<4){retries++;setStatus('load','Reconnexion…');setTimeout(()=>{if(hls&&wantPlay)hls.startLoad()},2500);return}
+      nextUrl();
+    });
+  }else m.src=url;
+  m.play().catch(err=>{if(err.name!=='AbortError'&&err.name!=='NotAllowedError')nextUrl()});
+}
+function nextUrl(){
+  if(!wantPlay||!current)return;
+  if(playMode==='tv'&&current.urls)hSet(current.urls[attempt],false);
+  everPlayed=false;retries=0;
+  const n=(current.urls||[current.url]).length;
+  if(attempt+1<n){attempt++;stopEngine();setStatus('load',`Autre lien (${attempt+1}/${n})…`);startUrl()}
+  else fail();
+}
+function resetIdle(){$('#tvIdle').innerHTML='<div><img src="logo.png" alt=""><div>Choisissez une chaîne dans la liste</div></div>'}
+function offlineCard(s,afterFail){
+  const box=$('#tvIdle');box.hidden=false;
+  const txt=afterFail?`Le direct ne répond pas dans l'appli pour le moment.`:s.link?`${esc(s.name)} diffuse son direct sur sa plateforme officielle.`:esc(s.info||"Pas de direct disponible sur internet pour cette chaîne.");
+  box.innerHTML=`<div><strong>${esc(s.name)}${s.tnt?' · TNT '+s.tnt:''}</strong><p>${txt}</p>${s.link?`<a class="btn-gold" href="${esc(s.link)}" target="_blank" rel="noopener">Regarder sur ${esc(s.via)}</a>`:''}</div>`;
+}
+function playStation(s){
+  stopEngine();
+  if(mode==='tv')resetIdle();
+  if(mode==='tv'&&s.urls&&!s.urls.length){
+    // chaîne sans flux public : on affiche le lien officiel ou l'explication
+    current=s;playMode=mode;wantPlay=false;
+    const S=st();S.last=s;save('last');
+    showNow(s);setStatus('',s.link?'Direct sur '+s.via:'Hors internet');offlineCard(s);
+    S.recents=[s,...S.recents.filter(r=>r.id!==s.id)].slice(0,15);save('recents');
+    document.querySelectorAll('.st').forEach(li=>li.classList.toggle('cur',list[li.dataset.i]?.id===s.id));
+    return;
+  }
+  current=s;playMode=mode;attempt=0;wantPlay=true;retries=0;everPlayed=false;
+  const S=st();if(!s.adult){S.last=s;save('last')}
+  showNow(s);setStatus('load','Connexion…');
+  startUrl();
+  if(!s.adult){S.recents=[s,...S.recents.filter(r=>r.id!==s.id)].slice(0,15);save('recents')}
+  if(mode==='radio'&&s.id&&!s.id.startsWith('mine-'))api('/json/url/'+s.id).catch(()=>{});
+  document.querySelectorAll('.st').forEach(li=>li.classList.toggle('cur',list[li.dataset.i]?.id===s.id));
+  mediaSession(s);
+}
+function fail(){
+  if(!wantPlay)return;wantPlay=false;stopEngine();
+  setStatus('err','Indisponible');
+  if(playMode==='tv'&&current&&current.link){offlineCard(current,true);return}
+  if(playMode==='tv'&&current&&current.urls&&!['fav','recent','mine'].includes(st().tab)&&!$('#q').value){
+    // chaîne en panne : retirée de la liste affichée
+    const id=current.id;list=list.filter(x=>x.id!==id);render();
+    toast('Cette chaîne est hors service : elle a été retirée de la liste.');return;
+  }
+  toast(`Cette ${cfg().one} ne diffuse pas pour le moment. Essayez-en une autre.`);
+}
+function pause(){wantPlay=false;stopEngine();setStatus('','En pause')}
+function toggle(){
+  const s=current&&playMode===mode?current:st().last;
+  if(!s){if(list.length)playStation(list[0]);return}
+  if(!wantPlay)playStation(s);else pause();
+}
+function step(d){
+  if(!list.length)return;
+  let i=list.findIndex(s=>current&&s.id===current.id);
+  i=(i+d+list.length)%list.length;playStation(list[i]);
+}
+for(const m of [audio,video]){
+  m.addEventListener('playing',()=>{if(m!==media())return;setStatus('live','En direct');everPlayed=true;retries=0;
+    if(playMode==='tv'&&current&&current.urls&&current.urls[attempt])hSet(current.urls[attempt],true)});
+  m.addEventListener('waiting',()=>{if(wantPlay&&m===media())setStatus('load','Chargement…')});
+  m.addEventListener('error',()=>{
+    if(!m.getAttribute('src')||m!==media())return;
+    if(everPlayed&&retries<3&&wantPlay){retries++;setStatus('load','Reconnexion…');setTimeout(()=>{if(wantPlay){m.load();m.play().catch(()=>{})}},2500);return}
+    nextUrl();
+  });
+}
+
+function mediaSession(s){
+  if(!('mediaSession' in navigator))return;
+  try{
+    navigator.mediaSession.metadata=new MediaMetadata({title:s.adult?'GJM Radio':s.name,artist:'GJM Radio',album:s.urls?'Télé en direct':(s.tags||'Radio en direct'),
+      artwork:s.favicon?[{src:s.favicon.replace(/^http:/,'https:'),sizes:'192x192'}]:[{src:'icon-192.png',sizes:'192x192',type:'image/png'}]});
+    navigator.mediaSession.setActionHandler('play',()=>playStation(current));
+    navigator.mediaSession.setActionHandler('pause',pause);
+    navigator.mediaSession.setActionHandler('previoustrack',()=>step(-1));
+    navigator.mediaSession.setActionHandler('nexttrack',()=>step(1));
+  }catch(e){}
+}
+
+/* ---------- Radio / Télé ---------- */
+function setMode(m,first){
+  if(!first&&m===mode)return;
+  if(!first){if(wantPlay)pause();current=null}
+  mode=m;store.set('mode',m);viewToken++;adultOpen=false;
+  const tv=m==='tv',c=cfg();
+  $('#modeRadio').setAttribute('aria-pressed',!tv);$('#modeTv').setAttribute('aria-pressed',tv);
+  $('#dial').hidden=tv;$('#tvScreen').hidden=!tv;$('#fs').hidden=!tv;$('#qMenu').hidden=true;updateQBtn();$('#tvIdle').hidden=false;resetIdle();
+  $('#q').placeholder=c.search;$('#foot').textContent=c.foot;
+  const [n,np,u,up,b]=c.form;
+  $('#addNameLbl').textContent=n;$('#addName').placeholder=np;$('#addUrlLbl').textContent=u;$('#addUrl').placeholder=up;$('#addBtn').textContent=b;
+  $('#addFmWrap').hidden=tv;
+  showNow(st().last);
+  renderTabs();showTab(st().tab);
+}
+
+/* ---------- Favoris ---------- */
+function toggleFav(s){
+  const S=st();
+  if(isFav(s.id)){S.favs=S.favs.filter(f=>f.id!==s.id);toast('Retirée des favoris')}
+  else{S.favs=[s,...S.favs];toast('Ajoutée aux favoris')}
+  save('favs');
+  const shown=current&&playMode===mode?current:S.last;
+  if(shown)$('#favNow').classList.toggle('on',isFav(shown.id));
+  if(S.tab==='fav'&&!$('#q').value)list=S.favs;
+  render();
+}
+
+/* ---------- Minuterie d'arrêt ---------- */
+const SLEEP=[0,15,30,60,90];let sleepIdx=0;
+function cycleSleep(){
+  sleepIdx=(sleepIdx+1)%SLEEP.length;clearInterval(sleepTimer);
+  const m=SLEEP[sleepIdx];$('#sleep').classList.toggle('on',m>0);
+  if(!m){$('#sleepTxt').hidden=true;toast('Minuterie désactivée');return}
+  sleepEnd=Date.now()+m*60000;toast(`Arrêt automatique dans ${m} min`);tickSleep();
+  sleepTimer=setInterval(tickSleep,1000);
+}
+function tickSleep(){
+  const left=sleepEnd-Date.now();const el=$('#sleepTxt');
+  if(left<=0){clearInterval(sleepTimer);sleepIdx=0;el.hidden=true;$('#sleep').classList.remove('on');wantPlay=false;stopEngine();setStatus('','Arrêt (minuterie)');return}
+  const mm=Math.floor(left/60000),ss=Math.floor(left%60000/1000);
+  el.hidden=false;el.textContent=`Arrêt dans ${mm}:${String(ss).padStart(2,'0')}`;
+}
+
+/* ---------- Plein écran (télé) ---------- */
+async function fullscreen(){
+  const box=$('#tvScreen');
+  try{
+    if(document.fullscreenElement){await document.exitFullscreen();return}
+    if(box.requestFullscreen)await box.requestFullscreen();
+    else if(video.webkitEnterFullscreen){video.webkitEnterFullscreen();return}
+    else throw 0;
+    try{await screen.orientation.lock('landscape')}catch(e){}
+  }catch(e){toast("Le plein écran n'est pas disponible ici")}
+}
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)try{screen.orientation.unlock()}catch(e){}});
+
+/* ---------- Événements ---------- */
+document.querySelector('.mode').addEventListener('click',e=>{const b=e.target.closest('[data-mode]');if(b)setMode(b.dataset.mode)});
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b)showTab(b.dataset.tab)});
+$('#list').addEventListener('click',e=>{
+  const p=e.target.closest('[data-play]'),f=e.target.closest('[data-fav]'),d=e.target.closest('[data-del]');
+  if(f)return toggleFav(list[f.dataset.fav]);
+  if(d){const S=st(),s=list[d.dataset.del];
+    if(S.tab==='adulte'){D.tv.adult=D.tv.adult.filter(m=>m.id!==s.id);store.set('tv_adult',D.tv.adult);list=list.filter(m=>m.id!==s.id);render();toast('Supprimée');return}
+    S.mine=S.mine.filter(m=>m.id!==s.id);save('mine');list=S.mine;render();toast('Supprimée');return}
+  if(p)playStation(list[p.dataset.play]);
+});
+$('#adultAll').onclick=()=>{adultAll=!adultAll;showTab('adulte')};
+$('#adultLock').onclick=()=>{lockAdult();toast('Espace 18+ verrouillé')};
+$('#play').onclick=toggle;$('#prev').onclick=()=>step(-1);$('#next').onclick=()=>step(1);
+$('#favNow').onclick=()=>{const s=current&&playMode===mode?current:st().last;if(s)toggleFav(s)};
+$('#sleep').onclick=cycleSleep;$('#fs').onclick=fullscreen;
+$('#progBtn').onclick=()=>{const p=$('#progPanel');p.hidden=!p.hidden;$('#progBtn').setAttribute('aria-expanded',!p.hidden);$('#progBtn').classList.toggle('on',!p.hidden);if(!p.hidden)renderProg()};
+$('#qBtn').onclick=()=>{const q=$('#qMenu');q.hidden=!q.hidden;$('#qBtn').setAttribute('aria-expanded',!q.hidden);$('#qBtn').classList.toggle('on',!q.hidden);if(!q.hidden)renderQMenu()};
+$('#qMenu').addEventListener('click',e=>{const b=e.target.closest('[data-q]');if(!b)return;
+  prefQ=b.dataset.q==='auto'?'auto':+b.dataset.q;store.set('quality',prefQ);applyQuality();updateQBtn();renderQMenu();
+  toast(prefQ==='auto'?'Qualité automatique':`Qualité limitée à ${prefQ}p`)});
+video.addEventListener('resize',updateQBtn);
+$('#progDays').addEventListener('click',e=>{const b=e.target.closest('[data-day]');if(b){progDay=+b.dataset.day;renderProg()}});
+setInterval(updateProgNow,30000);
+video.addEventListener('dblclick',fullscreen);
+const vol=$('#vol');vol.value=store.get('vol',80);
+const applyVol=()=>{audio.volume=video.volume=vol.value/100};applyVol();
+vol.oninput=()=>{applyVol();store.set('vol',+vol.value)};
+$('#q').addEventListener('input',e=>{clearTimeout(searchTimer);const q=e.target.value.trim();searchTimer=setTimeout(()=>doSearch(q),450)});
+$('#addForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const url=$('#addUrl').value.trim();
+  if(!/^https?:\/\//i.test(url)){toast("L'adresse doit commencer par https://");return}
+  const tv=mode==='tv',S=st(),name=$('#addName').value.trim();
+  if(tv&&S.tab==='adulte'&&adultOpen){
+    D.tv.adult=[{id:'adult-'+Date.now(),name,urls:[url],favicon:'',q:'',part:false,country:'Privé',adult:true},...D.tv.adult];
+    store.set('tv_adult',D.tv.adult);e.target.reset();toast('Lien ajouté, test en cours');showTab('adulte');return;
+  }
+  const s=tv?{id:'mine-'+Date.now(),name,urls:[url],favicon:'',q:'',part:false,country:'Ma chaîne'}
+    :{id:'mine-'+Date.now(),name,url,favicon:'',tags:'Ma radio',country:'',bitrate:0,fm:$('#addFm').value.trim()||null,hls:/\.m3u8/i.test(url)};
+  S.mine=[s,...S.mine];save('mine');e.target.reset();list=S.mine;render();toast(tv?'Chaîne ajoutée':'Radio ajoutée');
+});
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&!/INPUT|BUTTON/.test(e.target.tagName)){e.preventDefault();toggle()}});
+
+/* ---------- Installation (PWA) ---------- */
+let deferred=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;$('#installBtn').hidden=false});
+$('#installBtn').onclick=async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;$('#installBtn').hidden=true};
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+window.addEventListener('offline',()=>toast('Connexion internet perdue'));
+window.addEventListener('online',()=>toast('Connexion rétablie'));
+
+/* ---------- Démarrage ---------- */
+setMode(mode,true);
+loadProg();
+</script>
+</body>
+</html>
