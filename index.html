@@ -236,9 +236,12 @@ input[type=range]{flex:1;accent-color:var(--gold)}
 .ad-media.on .ad-eq i{animation:eq .9s infinite ease-in-out}.ad-eq i:nth-child(2){animation-delay:.2s!important}.ad-eq i:nth-child(3){animation-delay:.4s!important}
 .ad-go{justify-self:start;margin-top:6px;background:var(--gold);color:var(--navy);border:2px solid #fff;border-radius:999px;padding:6px 14px;font-weight:800;font-size:13px;text-decoration:none}
 .ad-txt{display:grid;gap:3px;min-width:0}
+.ad-txt b,.ad-txt span{color:#ffffff!important;font-weight:800!important}
+.ad-txt b{font-size:16px;line-height:1.25}
+.ad-txt span{font-size:14px;line-height:1.35}
+.ad-go{white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:440px){.ad-card{grid-template-columns:118px minmax(0,1fr);gap:12px}.ad-preview .ad-card{grid-template-columns:100px minmax(0,1fr);padding:10px}.ad-go{font-size:12px;padding:6px 11px}}
 .ad-txt small{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.ad-txt b{font-size:15.5px}
-.ad-txt span{color:var(--muted);font-size:13px}
 .ad-dots{position:absolute;right:10px;top:10px;display:flex;gap:5px;z-index:2}
 .ad-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.45);border:1px solid #fff}
 .ad-dots i.on{background:var(--gold)}
@@ -246,6 +249,11 @@ input[type=range]{flex:1;accent-color:var(--gold)}
 .adm-item{border:2px solid #fff;border-radius:14px;padding:12px;display:grid;gap:8px;background:var(--navy-2)}
 .adm-item img,.adm-item video{max-width:100%;width:160px;aspect-ratio:1/1;object-fit:cover;border-radius:10px;border:1.5px solid #fff;background:#000}
 .adm-item audio{width:100%;max-width:320px}
+.ad-preview{border:2px dashed var(--gold);border-radius:16px;padding:10px;display:grid;gap:6px}
+.ad-preview>p{margin:0;color:var(--gold);font-weight:800;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase}
+.ad-preview .ad-card{border:2px solid #fff;border-radius:14px;background:var(--navy-2)}
+.ad-preview .ad-media audio{position:absolute;left:4px;right:4px;bottom:4px;width:calc(100% - 8px);z-index:2}
+.ad-preview .empty-sq{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:12px;text-align:center;padding:8px}
 .adm-item.off{opacity:.55}
 .add input[type=file]{color:var(--ink)}
 /* Onglets : tous visibles (retour à la ligne), texte blanc et gras */
@@ -1183,7 +1191,11 @@ $('#addForm').addEventListener('submit',e=>{
     :{id:'mine-'+Date.now(),name,url,favicon:'',tags:'Ma radio',country:'',bitrate:0,fm:$('#addFm').value.trim()||null,hls:/\.m3u8/i.test(url)};
   S.mine=[s,...S.mine];save('mine');e.target.reset();list=S.mine;render();toast(tv?'Chaîne ajoutée':'Radio ajoutée');
 });
-document.addEventListener('keydown',e=>{if(e.code==='Space'&&!/INPUT|BUTTON/.test(e.target.tagName)){e.preventDefault();toggle()}});
+document.addEventListener('keydown',e=>{
+  const t=e.target;
+  if(e.code!=='Space'||/^(INPUT|BUTTON|TEXTAREA|SELECT|A|VIDEO|AUDIO)$/.test(t.tagName)||t.isContentEditable||!$('#sheet').hidden)return;
+  e.preventDefault();toggle();
+});
 
 /* ---------- Installation (PWA) ---------- */
 let deferred=null;
@@ -1299,7 +1311,7 @@ function drawInfos(){
       <div>${esc(i.texte)}</div><div class="req meta" style="border:0;padding:0;background:none">${i.actif?'Affichée':'Masquée'} · publiée le ${fdate(i.created_at)}</div>
       <div class="btns"><button data-ia="toggle">${i.actif?'Masquer':'Afficher'}</button><button class="no" data-ia="del">Supprimer</button></div></div>`).join('')}`;
 }
-function drawPubs(){
+function drawPubs(){setTimeout(renderAdPreview,0);
   $('#stAdmin').innerHTML=`${adminNav()}
     <form class="add" id="pubForm"><p class="help">La pub s'affiche sous le lecteur, chez tous les utilisateurs. S'il y en a plusieurs, elles tournent toutes les 8 secondes.</p>
       <label>Titre<input id="adT" required maxlength="80" placeholder="Ex. MD Multiservice : pressing express"></label>
@@ -1312,6 +1324,7 @@ function drawPubs(){
       <label>Lien quand on touche la pub (facultatif)<input id="adL" placeholder="https://wa.me/2250700000000 ou https://site.com"></label>
       <div class="row2"><label>Fin de diffusion (facultatif)<input id="adE" type="date"></label>
         <label>Ordre d'affichage<input id="adO" type="number" value="0" min="0" max="99"></label></div>
+      <div class="ad-preview" id="adPrev"><p>Aperçu : ce que verront les utilisateurs</p><div id="adPrevBox"></div></div>
       <button class="btn-gold" type="submit" id="adSend">Publier la pub</button></form>
     ${adminPubs.length?'':'<p class="help">Aucune publicité.</p>'}
     ${adminPubs.map(p=>{const exp=p.fin&&p.fin<today();return `<div class="adm-item${p.actif&&!exp?'':' off'}" data-pid="${esc(p.id)}">
@@ -1399,18 +1412,45 @@ $('#stAdmin').addEventListener('submit',async e=>{
       const body={titre:$('#adT').value.trim(),texte:$('#adX').value.trim()||null,lien:l||null,fin:$('#adE').value||null,ordre:+$('#adO').value||0,media:kind};
       if(kind==='image'){body.image=main;body.media_url=null}else{body.media_url=main;body.image=cover}
       await sb('/rest/v1/pubs',{method:'POST',token:adminTok,prefer:'return=minimal',body});
+      prevUrls.forEach(u=>URL.revokeObjectURL(u));prevUrls=[];
       toast('Publicité en ligne');await renderAdmin();loadBroadcast();
     }catch(err){admErr(err)}
     finally{b.disabled=false;b.textContent='Publier la pub'}
   }
 });
+/* Aperçu de la pub avant envoi */
+let prevUrls=[];
+function prevSrc(input){const f=input&&input.files&&input.files[0];if(!f)return '';const u=URL.createObjectURL(f);prevUrls.push(u);return u}
+function renderAdPreview(){
+  const box=$('#adPrevBox');if(!box)return;
+  prevUrls.forEach(u=>URL.revokeObjectURL(u));prevUrls=[];
+  const k=$('#adK').value,titre=$('#adT').value.trim()||'Titre de la pub',texte=$('#adX').value.trim(),l=$('#adL').value.trim();
+  const main=prevSrc($('#adF'))||($('#adU').value.trim().startsWith('https://')?$('#adU').value.trim():'');
+  const cover=k==='audio'?(prevSrc($('#adC'))||'logo.png'):k==='video'?prevSrc($('#adC')):'';
+  let sq;
+  if(!main)sq=`<span class="empty-sq">${k==='image'?'Choisissez une image':k==='video'?'Choisissez une vidéo':'Choisissez un fichier audio'}</span>`;
+  else if(k==='video')sq=`<video src="${esc(main)}" ${cover?`poster="${esc(cover)}"`:''} controls playsinline preload="metadata"></video>`;
+  else if(k==='audio')sq=`<img src="${esc(cover)}" alt=""><audio src="${esc(main)}" controls preload="metadata"></audio>`;
+  else sq=`<img src="${esc(main)}" alt="">`;
+  const btn=l?`<span class="ad-go">${/wa\.me|whatsapp/i.test(l)?'WhatsApp':/^tel:/i.test(l)?'Appeler':'En savoir plus'}</span>`:'';
+  box.innerHTML=`<div class="ad-card"><div class="ad-media">${sq}</div><div class="ad-txt"><small>Publicité</small><b>${esc(titre)}</b>${texte?`<span>${esc(texte)}</span>`:''}${btn}</div></div>`;
+  const m=box.querySelector('video,audio');
+  if(m)m.addEventListener('error',()=>toast(k==='video'?'Cette vidéo ne peut pas être lue ici : préférez le format MP4.':'Ce fichier audio ne peut pas être lu ici : préférez le MP3.'));
+}
+let prevTimer=null;
+$('#stAdmin').addEventListener('input',e=>{
+  if(!e.target.closest('#pubForm'))return;
+  if(e.target.type==='file')return;               // les fichiers passent par « change »
+  clearTimeout(prevTimer);prevTimer=setTimeout(renderAdPreview,250);
+});
 $('#stAdmin').addEventListener('change',e=>{
+  if(e.target.closest('#pubForm')&&e.target.id!=='adK')renderAdPreview();
   if(e.target.id!=='adK')return;
   const k=e.target.value;
   $('#adF').accept=k==='image'?'image/*':k==='video'?'video/*':'audio/*';$('#adF').value='';
   $('#adFL').textContent=k==='image'?'Image':k==='video'?'Vidéo (MP4, 20 Mo maximum, 15 à 60 secondes conseillé)':'Fichier audio (MP3 ou M4A, 20 Mo maximum)';
   $('#adUL').textContent=k==='image'?"…ou lien d'une image déjà en ligne":k==='video'?"…ou lien https d'une vidéo MP4":"…ou lien https d'un fichier audio";
-  $('#adCW').hidden=k==='image';
+  $('#adCW').hidden=k==='image';$('#adC').value='';setTimeout(renderAdPreview,0);
   $('#adH').textContent=k==='image'?"L'image s'affiche dans un carré : une photo carrée rend mieux."
     :k==='video'?"La vidéo passe dans un carré, d'abord sans le son, puis avec le son dès que l'utilisateur touche l'écran. Il peut la couper avec le bouton haut-parleur. Le son est coupé automatiquement pendant l'écoute d'une radio ou d'une chaîne."
     :"Le spot audio se joue avec l'image de couverture (ou le logo GJM Radio). Il démarre quand l'utilisateur a touché l'écran et ne joue pas pendant l'écoute d'une radio ou d'une chaîne.";
@@ -1588,7 +1628,7 @@ function showPub(k){
   if(media==='video')sq=`<video src="${esc(p.media_url)}" ${p.image?`poster="${esc(p.image)}"`:''} playsinline muted autoplay ${one?'loop':''} preload="metadata"></video><button class="ad-snd" type="button"></button>`;
   else if(media==='audio')sq=`<img src="${esc(p.image||'logo.png')}" alt=""><audio src="${esc(p.media_url)}" preload="none" ${one?'loop':''}></audio><span class="ad-eq"><i></i><i></i><i></i></span><button class="ad-tap" type="button" hidden>Touchez pour écouter</button><button class="ad-snd" type="button"></button>`;
   else sq=`<img src="${esc(p.image)}" alt="${esc(p.titre)}" loading="lazy">`;
-  $('#adBox').innerHTML=`<div class="ad-card"><div class="ad-media">${sq}</div><div class="ad-txt"><small>Publicité</small><b>${esc(p.titre)}</b>${p.texte?`<span>${esc(p.texte)}</span>`:''}${p.lien?`<a class="ad-go" href="${esc(p.lien)}" target="_blank" rel="noopener sponsored">${/wa\.me|whatsapp/i.test(p.lien)?'Contacter sur WhatsApp':/^tel:/i.test(p.lien)?'Appeler':'En savoir plus'}</a>`:''}</div></div>`;
+  $('#adBox').innerHTML=`<div class="ad-card"><div class="ad-media">${sq}</div><div class="ad-txt"><small>Publicité</small><b>${esc(p.titre)}</b>${p.texte?`<span>${esc(p.texte)}</span>`:''}${p.lien?`<a class="ad-go" href="${esc(p.lien)}" target="_blank" rel="noopener sponsored">${/wa\.me|whatsapp/i.test(p.lien)?'WhatsApp':/^tel:/i.test(p.lien)?'Appeler':'En savoir plus'}</a>`:''}</div></div>`;
   $('#adDots').innerHTML=pubsList.length>1?pubsList.map((_,i)=>`<i class="${i===pubIdx?'on':''}"></i>`).join(''):'';
   const m=adMediaEl();
   if(m){
