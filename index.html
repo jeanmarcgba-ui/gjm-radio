@@ -173,6 +173,23 @@ input[type=range]{flex:1;accent-color:var(--gold)}
 .qopts button{border:1px solid var(--line);background:none;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;color:var(--ink)}
 .qopts button[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:var(--navy)}
 .tvscreen:fullscreen{border:none;border-radius:0}
+
+/* Contours blancs épais (demande de Jean Marc) */
+:root{--edge:#ffffff;--edge-w:2px}
+.ic,.chip,.btn-ghost,.tab,.mode,.search input,.add input,.lock input[type=password],.prog-days button,.qopts button,.star{border:var(--edge-w) solid var(--edge)!important}
+.mode button{border:var(--edge-w) solid transparent}
+.mode button[aria-pressed=true]{border-color:var(--edge)}
+.play{border:3px solid var(--edge)!important}
+.star{border-radius:50%}
+.del{border:var(--edge-w) solid var(--danger);border-radius:999px;padding:6px 12px}
+.tabs{padding:3px 3px 6px}
+.list{gap:10px}
+.st{border:var(--edge-w) solid var(--edge);border-radius:14px;padding:10px 12px;background:var(--navy-2)}
+.st:hover{background:var(--navy-3)}
+.st.cur{background:var(--navy-3);border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.set{border:var(--edge-w) solid var(--edge)}
+.tvscreen,.dial{border:var(--edge-w) solid var(--edge)}
+.add{border:var(--edge-w) solid var(--edge)}
 </style>
 </head>
 <body>
