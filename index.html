@@ -123,7 +123,7 @@ input[type=range]{flex:1;accent-color:var(--gold)}
 .btn-gold{background:var(--gold);color:var(--navy);border:none;border-radius:10px;padding:11px;font-weight:700}
 .del{background:none;border:none;color:var(--danger);font-size:12px;font-weight:600;padding:8px}
 
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--gold);color:var(--navy);font-weight:600;padding:10px 16px;border-radius:12px;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:9}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--gold);color:var(--navy);font-weight:600;padding:10px 16px;border-radius:12px;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:30}
 .foot{color:var(--muted);font-size:12px;text-align:center;margin-top:28px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
@@ -174,6 +174,48 @@ input[type=range]{flex:1;accent-color:var(--gold)}
 .qopts button[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:var(--navy)}
 .tvscreen:fullscreen{border:none;border-radius:0}
 
+/* Espace Diffuser */
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(4,10,22,.88);overflow-y:auto;
+  padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
+  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.sheet-in{max-width:680px;margin:0 auto;background:var(--navy);border:2px solid #fff;border-radius:18px;padding:16px;display:grid;gap:14px}
+.sheet-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sheet-top h2{font-family:var(--f-display);font-size:18px;margin:0}
+.sheet-tabs{display:flex;flex-wrap:wrap;gap:8px}
+.sheet-tabs button{border:2px solid #fff;background:var(--navy-2);color:#fff;font-weight:800;border-radius:999px;padding:8px 14px}
+.sheet-tabs button[aria-pressed=true]{background:var(--gold);color:var(--navy)}
+.sheet p.help{margin:0;color:var(--muted);line-height:1.5;font-size:13.5px}
+.sheet p.help b{color:var(--ink)}
+.sheet .add{margin:0}
+.add select,.add textarea{background:var(--navy);border:2px solid #fff;border-radius:10px;padding:10px 12px;min-width:0;color:var(--ink);font:inherit}
+.add textarea{min-height:70px;resize:vertical}
+.check{display:flex!important;gap:8px;align-items:flex-start;color:var(--ink)!important;font-size:13px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:480px){.row2{grid-template-columns:1fr}}
+.ok-box{border:2px solid var(--gold);border-radius:14px;padding:14px;display:grid;gap:8px}
+.ok-box b{color:var(--gold);font-size:16px}
+.req{border:2px solid #fff;border-radius:14px;padding:12px;display:grid;gap:8px;background:var(--navy-2)}
+.req h3{margin:0;font-size:15.5px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.badge{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border:1.5px solid currentColor;border-radius:6px;padding:1px 6px}
+.b-attente{color:var(--gold)}.b-valide{color:#7ee2a0}.b-refuse{color:var(--danger)}
+.req .meta{color:var(--muted);font-size:13px;line-height:1.5;word-break:break-word}
+.req .meta b{color:var(--ink);user-select:all}
+.req input{background:var(--navy);border:2px solid #fff;border-radius:10px;padding:9px 11px;min-width:0;width:100%;font-size:13px}
+.req label{font-size:12px;color:var(--muted);display:grid;gap:4px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btns button{border:2px solid #fff;background:none;border-radius:999px;padding:7px 12px;font-weight:700;font-size:13px}
+.btns .go{background:var(--gold);color:var(--navy)}
+.btns .no{border-color:var(--danger);color:var(--danger)}
+.studio-prev{position:relative;aspect-ratio:16/9;max-width:100%;background:#000;border:2px solid #fff;border-radius:12px;overflow:hidden;display:grid;place-items:center;color:var(--muted)}
+.studio-prev video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.live-pill{position:absolute;top:10px;left:10px;background:var(--danger);color:#fff;font-weight:800;font-size:12px;border-radius:6px;padding:3px 8px;z-index:2}
+.linkbtn2{background:none;border:none;color:var(--muted);text-decoration:underline;font-size:12.5px;padding:6px}
+/* Onglets : tous visibles (retour à la ligne), texte blanc et gras */
+.tabs{flex-wrap:wrap;overflow:visible!important;gap:8px}
+.tab{color:#ffffff!important;font-weight:800!important;background:var(--navy-2)}
+.tab[aria-selected=true]{background:var(--gold);color:var(--navy)!important}
+.mode button{color:#ffffff;font-weight:800}
+.mode button[aria-pressed=true]{color:var(--navy)}
 /* Contours blancs épais (demande de Jean Marc) */
 :root{--edge:#ffffff;--edge-w:2px}
 .ic,.chip,.btn-ghost,.tab,.mode,.search input,.add input,.lock input[type=password],.prog-days button,.qopts button,.star{border:var(--edge-w) solid var(--edge)!important}
@@ -199,7 +241,10 @@ input[type=range]{flex:1;accent-color:var(--gold)}
       <img src="logo.png" alt="Logo GJM Radio">
       <div><h1>GJM <span>Radio</span></h1><small id="subtitle">Radio &amp; Télé en direct · GJM Tecnologie</small></div>
     </div>
-    <button class="btn-ghost" id="installBtn" hidden>Installer l'appli</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+      <button class="btn-ghost" id="diffBtn">Diffuser</button>
+      <button class="btn-ghost" id="installBtn" hidden>Installer l'appli</button>
+    </div>
   </header>
 
   <div class="mode" role="group" aria-label="Choisir Radio ou Télé">
@@ -269,6 +314,62 @@ input[type=range]{flex:1;accent-color:var(--gold)}
   <ul class="list" id="list"></ul>
 
   <p class="foot" id="foot"></p>
+  <p class="foot"><button class="linkbtn2" id="adminLink">Espace administrateur</button></p>
+</div>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-in">
+    <div class="sheet-top">
+      <h2 id="sheetTitle">Diffuser sur GJM Radio</h2>
+      <button class="ic" id="sheetClose" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></svg></button>
+    </div>
+    <div class="sheet-tabs" id="sheetTabs">
+      <button data-st="prop" aria-pressed="true">Proposer ma chaîne</button>
+      <button data-st="studio" aria-pressed="false">Studio direct</button>
+      <button data-st="admin" aria-pressed="false" id="stAdminTab" hidden>Administration</button>
+    </div>
+
+    <section id="stProp">
+      <form class="add" id="propForm" autocomplete="on">
+        <p class="help">Vous avez une radio ou une télé ? Proposez-la : après vérification par <b>GJM Tecnologie</b>, elle apparaît dans l'onglet <b>Partenaires</b> chez tous les utilisateurs.</p>
+        <div class="row2">
+          <label>Type<select id="pType"><option value="tv">Télé</option><option value="radio">Radio</option></select></label>
+          <label>Catégorie<select id="pCat"><option>Information</option><option>Religion</option><option>Musique</option><option>Sport</option><option>Divertissement</option><option>Éducation</option><option>Autre</option></select></label>
+        </div>
+        <label>Nom de la chaîne<input id="pNom" required maxlength="80" placeholder="Ex. Radio Saint Ignace"></label>
+        <label>Comment diffusez-vous ?<select id="pMode">
+          <option value="lien">J'ai déjà un lien de direct</option>
+          <option value="studio">Je veux diffuser depuis mon téléphone (Studio)</option>
+        </select></label>
+        <label id="pLienWrap">Lien du direct (https, souvent .m3u8 pour la télé)<input id="pLien" type="url" maxlength="500" placeholder="https://…/live/index.m3u8"></label>
+        <label>Logo (lien https d'une image, facultatif)<input id="pLogo" type="url" maxlength="500" placeholder="https://…/logo.png"></label>
+        <label>Présentation (facultatif)<textarea id="pDesc" maxlength="500" placeholder="Ce que diffuse votre chaîne, horaires…"></textarea></label>
+        <div class="row2">
+          <label>Votre nom<input id="pCNom" required maxlength="80" autocomplete="name"></label>
+          <label>Téléphone / WhatsApp<input id="pCTel" required maxlength="30" inputmode="tel" autocomplete="tel" placeholder="+225 …"></label>
+        </div>
+        <label>E-mail (facultatif)<input id="pCMail" type="email" maxlength="120" autocomplete="email"></label>
+        <label class="check"><input type="checkbox" id="pDroits" required> Je certifie que cette chaîne m'appartient ou que j'ai le droit de la diffuser.</label>
+        <button class="btn-gold" type="submit" id="pSend">Envoyer ma demande</button>
+      </form>
+      <div class="ok-box" id="propOk" hidden></div>
+    </section>
+
+    <section id="stStudio" hidden>
+      <div class="add">
+        <p class="help">Diffusez en direct avec la caméra et le micro de ce téléphone. Votre <b>clé de diffusion</b> vous est donnée par GJM Tecnologie quand votre chaîne « Studio » est validée.</p>
+        <label>Clé de diffusion<input id="sKey" type="url" placeholder="https://…" autocomplete="off"></label>
+        <div class="row2">
+          <label>Je diffuse<select id="sKind"><option value="tv">Télé (caméra + micro)</option><option value="radio">Radio (micro seulement)</option></select></label>
+          <label id="sCamWrap">Caméra<select id="sCam"><option value="user">Avant</option><option value="environment">Arrière</option></select></label>
+        </div>
+        <div class="studio-prev" id="sPrev"><span class="live-pill" id="sPill" hidden>EN DIRECT</span><video id="sVideo" muted playsinline autoplay></video><span id="sIdle">Aperçu de la caméra</span></div>
+        <div class="btns"><button class="go" type="button" id="sStart">Démarrer le direct</button><button class="no" type="button" id="sStop" hidden>Arrêter le direct</button></div>
+        <p class="help" id="sStatus">Prêt. Gardez l'appli ouverte et l'écran allumé pendant le direct.</p>
+      </div>
+    </section>
+
+    <section id="stAdmin" hidden></section>
+  </div>
 </div>
 <div class="toast" id="toast" hidden></div>
 <audio id="audio" preload="none"></audio>
@@ -295,8 +396,8 @@ const NOLLY=/nolly|naija|afri|wazobia/i;
 
 const MODES={
   radio:{
-    tabs:[['ci',"Côte d'Ivoire"],['afrique','Afrique'],['france','France'],['sport','Sport'],['monde','Monde'],['fav','Favoris'],['recent','Récentes'],['mine','Mes radios']],
-    titles:{ci:"Radios de Côte d'Ivoire",sport:"Radios de sport",afrique:"Radios d'Afrique",france:"Radios de France",monde:"Les plus écoutées au monde",fav:"Mes radios favorites",recent:"Écoutées récemment",mine:"Mes radios ajoutées"},
+    tabs:[['ci',"Côte d'Ivoire"],['partenaires','Partenaires'],['afrique','Afrique'],['france','France'],['sport','Sport'],['monde','Monde'],['fav','Favoris'],['recent','Récentes'],['mine','Mes radios']],
+    titles:{partenaires:"Radios partenaires GJM",ci:"Radios de Côte d'Ivoire",sport:"Radios de sport",afrique:"Radios d'Afrique",france:"Radios de France",monde:"Les plus écoutées au monde",fav:"Mes radios favorites",recent:"Écoutées récemment",mine:"Mes radios ajoutées"},
     one:'station',many:'stations',search:'Rechercher une radio (ex. Nostalgie, RFI, Fréquence 2)',
     idleName:'Choisissez une station',idleMeta:"Touchez une radio dans la liste pour l'écouter",
     foot:"Stations fournies par l'annuaire libre Radio Browser · © GJM Tecnologie",
@@ -304,8 +405,8 @@ const MODES={
     form:['Nom de la radio','Ex. Radio paroissiale Saint Ignace','Adresse du flux (lien https du stream)','https://…/stream','Ajouter la radio']
   },
   tv:{
-    tabs:[['tnt','TNT'],['ci',"Côte d'Ivoire"],['afrique','Afrique'],['france','France & Info'],['sport','Sport'],['doc','Documentaires'],['series','Séries'],['films','Films & Nollywood'],['fav','Favoris'],['recent','Récentes'],['mine','Mes chaînes'],['adulte','18+']],
-    titles:{tnt:"TNT Côte d'Ivoire",ci:"Chaînes de Côte d'Ivoire",sport:"Chaînes de sport",doc:"Chaînes de documentaires",series:"Chaînes de séries et novelas",films:"Films et Nollywood",afrique:"Chaînes d'Afrique",france:"Chaînes de France et d'info",fav:"Mes chaînes favorites",recent:"Regardées récemment",mine:"Mes chaînes ajoutées",adulte:"18+ · espace privé"},
+    tabs:[['tnt','TNT'],['partenaires','Partenaires'],['ci',"Côte d'Ivoire"],['afrique','Afrique'],['france','France & Info'],['sport','Sport'],['doc','Documentaires'],['series','Séries'],['films','Films & Nollywood'],['fav','Favoris'],['recent','Récentes'],['mine','Mes chaînes'],['adulte','18+']],
+    titles:{partenaires:"Chaînes partenaires GJM",tnt:"TNT Côte d'Ivoire",ci:"Chaînes de Côte d'Ivoire",sport:"Chaînes de sport",doc:"Chaînes de documentaires",series:"Chaînes de séries et novelas",films:"Films et Nollywood",afrique:"Chaînes d'Afrique",france:"Chaînes de France et d'info",fav:"Mes chaînes favorites",recent:"Regardées récemment",mine:"Mes chaînes ajoutées",adulte:"18+ · espace privé"},
     one:'chaîne',many:'chaînes',search:'Rechercher une chaîne (ex. RTI, France 24, Africa 24)',
     idleName:'Choisissez une chaîne',idleMeta:'Touchez une chaîne dans la liste pour la regarder',
     foot:"Chaînes gratuites diffusées publiquement sur internet (liste libre iptv-org) · © GJM Tecnologie",
@@ -445,8 +546,41 @@ async function loadTnt(){
     return {...(s||{urls:[],q:'',part:false,favicon:''}),id:s?s.id:'tnt-'+t.n,name:t.name,tnt:t.n,link:t.link||'',via:t.via||'',info:t.info||'',country:'TNT canal '+t.n};
   });
 }
+/* ---------- Partenaires (Supabase) ---------- */
+const CFG={url:'',key:''};let cfgLoaded=null;
+function loadCfg(){
+  if(!cfgLoaded)cfgLoaded=fetch('config.json',{cache:'no-cache'}).then(r=>r.ok?r.json():{}).then(j=>{CFG.url=String(j.supabaseUrl||'').trim().replace(/\/+$/,'');CFG.key=String(j.supabaseKey||'').trim()}).catch(()=>{});
+  return cfgLoaded;
+}
+const sbReady=()=>!!(CFG.url&&CFG.key);
+async function sb(path,{method='GET',body,token,prefer}={}){
+  await loadCfg();
+  if(!sbReady())throw Object.assign(new Error("L'espace partenaires n'est pas encore configuré (fichier config.json)."),{status:0});
+  const hd={apikey:CFG.key,Authorization:'Bearer '+(token||CFG.key)};
+  if(body!==undefined)hd['Content-Type']='application/json';
+  if(prefer)hd.Prefer=prefer;
+  let r;
+  try{r=await fetch(CFG.url+path,{method,headers:hd,body:body!==undefined?JSON.stringify(body):undefined})}
+  catch(e){throw Object.assign(new Error('Pas de connexion internet.'),{status:0})}
+  if(!r.ok){let m='';try{const j=await r.json();m=j.message||j.msg||j.error_description||j.error||''}catch(e){}
+    throw Object.assign(new Error(m||('Erreur '+r.status)),{status:r.status})}
+  const t=await r.text();return t?JSON.parse(t):null;
+}
+let partnersCache=null;
+async function partnersFor(m){
+  if(!partnersCache)partnersCache=sb('/rest/v1/chaines_publiques?select=*&order=nom.asc').catch(e=>{partnersCache=null;throw e});
+  const rows=await partnersCache;
+  return rows.filter(r=>r.type===(m==='tv'?'tv':'radio')).map(r=>m==='tv'
+    ?{id:'p-'+r.id,name:r.nom,urls:[r.lien],favicon:r.logo||'',q:'',part:false,country:r.categorie||'Partenaire GJM',partner:true}
+    :{id:'p-'+r.id,name:r.nom,url:r.lien,favicon:r.logo||'',tags:r.categorie||'Partenaire GJM',country:'',bitrate:0,hls:/\.m3u8/i.test(r.lien),partner:true});
+}
+function partnerEmpty(){
+  return sbReady()?"Aucune chaîne partenaire pour le moment. Touchez « Diffuser » en haut pour proposer la vôtre."
+    :"L'espace partenaires n'est pas encore activé.";
+}
 async function loadTv(t){
   let out;
+  if(t==='partenaires')return partnersFor('tv');
   if(t==='tnt')return loadTnt();
   if(t==='sport')return byLang(await cat('sports'));
   if(t==='doc')return byLang(await cat('documentary'));
@@ -477,6 +611,7 @@ async function load(t){
   if(t==='fav')return s.favs;
   if(t==='recent')return s.recents;
   if(t==='mine')return s.mine;
+  if(t==='partenaires'){try{return await partnersFor(mode)}catch(e){if(e.status===0&&!sbReady())return [];throw e}}
   if(cache[mode][t])return cache[mode][t];
   return cache[mode][t]=await (mode==='tv'?loadTv(t):loadRadio(t));
 }
@@ -748,8 +883,8 @@ async function showTab(t){
   try{
     const l=await load(t);
     if(tok!==viewToken)return;
-    if(m==='tv'&&!['fav','recent','mine'].includes(t))showVerified(l,tok,"Aucune chaîne de cette liste ne répond pour le moment. Réessayez plus tard.");
-    else{list=l;render()}
+    if(m==='tv'&&!['fav','recent','mine'].includes(t))showVerified(l,tok,t==='partenaires'&&!l.length?partnerEmpty():"Aucune chaîne de cette liste ne répond pour le moment. Réessayez plus tard.");
+    else{list=l;render(t==='partenaires'?partnerEmpty():undefined)}
   }
   catch(e){if(mode===m&&st().tab===t){list=[];$('#list').innerHTML=`<li class="empty">Impossible de charger la liste.<br>Vérifiez votre connexion internet puis touchez à nouveau l'onglet.<br>Vos favoris restent disponibles.</li>`}}
 }
@@ -761,7 +896,7 @@ async function doSearch(q){
     let res;
     if(m==='radio')res=cleanRadio(await api(`/json/stations/search?name=${encodeURIComponent(q)}&${Q}&limit=80`));
     else{
-      const parts=await Promise.allSettled(['tnt','ci','afrique','france','sport','doc','series','films'].map(t=>cache.tv[t]?Promise.resolve(cache.tv[t]):loadTv(t).then(l=>cache.tv[t]=l)));
+      const parts=await Promise.allSettled(['tnt','ci','afrique','france','sport','doc','series','films','partenaires'].map(t=>t==='partenaires'?partnersFor('tv'):cache.tv[t]?Promise.resolve(cache.tv[t]):loadTv(t).then(l=>cache.tv[t]=l)));
       const all=[...parts.flatMap(p=>p.status==='fulfilled'?p.value:[]),...D.tv.mine];
       const n=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
       const seen=new Set();res=all.filter(s=>n(s.name).includes(n(q))&&!seen.has(s.id)&&seen.add(s.id));
@@ -1011,6 +1146,211 @@ window.addEventListener('offline',()=>toast('Connexion internet perdue'));
 window.addEventListener('online',()=>toast('Connexion rétablie'));
 
 /* ---------- Démarrage ---------- */
+/* ================= Espace « Diffuser » ================= */
+const sess={get(k){try{return sessionStorage.getItem('gjmradio_'+k)}catch(e){return null}},set(k,v){try{v==null?sessionStorage.removeItem('gjmradio_'+k):sessionStorage.setItem('gjmradio_'+k,v)}catch(e){}}};
+let adminTok=sess.get('admin'),adminFilter='attente',adminRows=[];
+function openSheet(tab){
+  $('#sheet').hidden=false;document.body.style.overflow='hidden';
+  if(tab==='admin'||adminTok)$('#stAdminTab').hidden=false;
+  sheetTab(tab||'prop');
+}
+function closeSheet(){$('#sheet').hidden=true;document.body.style.overflow=''}
+function sheetTab(t){
+  document.querySelectorAll('#sheetTabs [data-st]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.st===t));
+  $('#stProp').hidden=t!=='prop';$('#stStudio').hidden=t!=='studio';$('#stAdmin').hidden=t!=='admin';
+  if(t==='admin')renderAdmin();
+}
+$('#diffBtn').onclick=()=>openSheet('prop');
+$('#adminLink').onclick=()=>openSheet('admin');
+$('#sheetClose').onclick=closeSheet;
+$('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#sheet').hidden)closeSheet()});
+$('#sheetTabs').addEventListener('click',e=>{const b=e.target.closest('[data-st]');if(b)sheetTab(b.dataset.st)});
+
+/* --- Proposer ma chaîne --- */
+const syncProp=()=>{const studio=$('#pMode').value==='studio';$('#pLienWrap').hidden=studio;$('#pLien').required=!studio};
+$('#pMode').onchange=syncProp;syncProp();
+let propForce=false;
+['pLien','pType','pMode'].forEach(id=>$('#'+id).addEventListener('input',()=>{propForce=false;$('#pSend').textContent='Envoyer ma demande'}));
+$('#propForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const b=$('#pSend');if(b.disabled)return;
+  const studio=$('#pMode').value==='studio',type=$('#pType').value,lien=$('#pLien').value.trim(),logo=$('#pLogo').value.trim();
+  if(!studio&&!/^https:\/\//i.test(lien)){toast('Le lien du direct doit commencer par https://');return}
+  if(logo&&!/^https:\/\//i.test(logo)){toast('Le lien du logo doit commencer par https://');return}
+  b.disabled=true;
+  try{
+    if(!studio&&type==='tv'&&!propForce){
+      b.textContent='Test du lien…';
+      if(!(await probe(lien))){propForce=true;b.textContent='Envoyer quand même';toast("Ce lien ne répond pas depuis ce téléphone. Vérifiez-le, ou envoyez quand même.");return}
+    }
+    b.textContent='Envoi…';
+    await sb('/rest/v1/chaines',{method:'POST',prefer:'return=minimal',body:{
+      type,nom:$('#pNom').value.trim(),mode:studio?'studio':'lien',lien:studio?null:lien,logo:logo||null,
+      categorie:$('#pCat').value,description:$('#pDesc').value.trim()||null,
+      contact_nom:$('#pCNom').value.trim(),contact_tel:$('#pCTel').value.trim(),contact_email:$('#pCMail').value.trim()||null}});
+    const nom=$('#pNom').value.trim(),tel=$('#pCTel').value.trim();
+    $('#propForm').hidden=true;
+    $('#propOk').hidden=false;
+    $('#propOk').innerHTML=`<b>Demande envoyée</b><p class="help">« ${esc(nom)} » est en attente de vérification. GJM Tecnologie vous contactera au <b>${esc(tel)}</b>.${studio?' Vous recevrez alors votre clé de diffusion pour le Studio direct.':' Une fois validée, votre chaîne apparaîtra dans l\'onglet Partenaires.'}</p><div class="btns"><button type="button" id="propAgain">Proposer une autre chaîne</button></div>`;
+    $('#propForm').reset();syncProp();propForce=false;
+  }catch(err){toast(err.message||"L'envoi a échoué. Réessayez.")}
+  finally{b.disabled=false;if(b.textContent==='Envoi…'||b.textContent==='Test du lien…')b.textContent='Envoyer ma demande'}
+});
+$('#propOk').addEventListener('click',e=>{if(e.target.id==='propAgain'){$('#propOk').hidden=true;$('#propForm').hidden=false}});
+
+/* --- Administration --- */
+async function renderAdmin(){
+  const box=$('#stAdmin');
+  if(!adminTok){
+    box.innerHTML=`<form class="add" id="admLogin"><p class="help">Réservé à GJM Tecnologie. Connectez-vous avec le compte administrateur créé dans Supabase.</p>
+      <label>E-mail<input id="aMail" type="email" required autocomplete="username"></label>
+      <label>Mot de passe<input id="aPass" type="password" required autocomplete="current-password"></label>
+      <button class="btn-gold" type="submit">Se connecter</button></form>`;
+    return;
+  }
+  box.innerHTML='<p class="help">Chargement des demandes…</p>';
+  try{adminRows=await sb('/rest/v1/chaines?select=*&order=created_at.desc',{token:adminTok})}
+  catch(e){if(e.status===401||e.status===403){adminTok=null;sess.set('admin',null);toast('Session expirée : reconnectez-vous');return renderAdmin()}
+    box.innerHTML=`<p class="help">${esc(e.message)}</p>`;return}
+  drawAdmin();
+}
+function drawAdmin(){
+  const n=s=>adminRows.filter(r=>r.statut===s).length;
+  const rows=adminRows.filter(r=>r.statut===adminFilter);
+  const lbl={attente:'En attente',valide:'Validées',refuse:'Refusées'};
+  const date=d=>{try{return new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return ''}};
+  $('#stAdmin').innerHTML=`<div class="btns" id="aFilters">${['attente','valide','refuse'].map(s=>`<button data-f="${s}" class="${s===adminFilter?'go':''}">${lbl[s]} (${n(s)})</button>`).join('')}
+      <button data-act="refresh">Actualiser</button><button data-act="logout">Se déconnecter</button></div>
+    ${rows.length?'':`<p class="help">Aucune demande ${lbl[adminFilter].toLowerCase()}.</p>`}
+    ${rows.map(r=>`<div class="req" data-id="${esc(r.id)}">
+      <h3>${esc(r.nom)} <span class="badge b-${esc(r.statut)}">${lbl[r.statut]}</span> <span class="badge">${r.type==='tv'?'Télé':'Radio'}</span> <span class="badge">${r.mode==='studio'?'Studio':'Lien'}</span></h3>
+      <div class="meta">${esc(r.categorie||'')} · reçue le ${date(r.created_at)}${r.description?'<br>'+esc(r.description):''}<br>
+        Contact : <b>${esc(r.contact_nom)}</b> · <b>${esc(r.contact_tel)}</b>${r.contact_email?' · <b>'+esc(r.contact_email)+'</b>':''}</div>
+      <label>Lien de lecture (ce que les utilisateurs écoutent ou regardent)<input data-k="lien" value="${esc(r.lien||'')}" placeholder="https://…/index.m3u8"></label>
+      ${r.mode==='studio'?`<label>Clé de diffusion à envoyer au partenaire (WHIP)<input data-k="cle_diffusion" value="${esc(r.cle_diffusion||'')}" placeholder="https://…"></label>`:''}
+      <label>Logo<input data-k="logo" value="${esc(r.logo||'')}" placeholder="https://…/logo.png"></label>
+      <div class="btns">
+        ${r.statut!=='valide'?'<button class="go" data-act="valide">Valider</button>':''}
+        ${r.statut!=='refuse'?'<button data-act="refuse">Refuser</button>':''}
+        <button data-act="save">Enregistrer</button>
+        <button data-act="test">Tester le lien</button>
+        ${r.mode==='studio'?'<button data-act="copy">Copier la clé</button>':''}
+        <button class="no" data-act="del">Supprimer</button>
+      </div></div>`).join('')}`;
+}
+$('#stAdmin').addEventListener('submit',async e=>{
+  if(e.target.id!=='admLogin')return;e.preventDefault();
+  try{
+    const r=await sb('/auth/v1/token?grant_type=password',{method:'POST',body:{email:$('#aMail').value.trim(),password:$('#aPass').value}});
+    adminTok=r.access_token;sess.set('admin',adminTok);$('#stAdminTab').hidden=false;toast('Connecté');renderAdmin();
+  }catch(err){toast(err.status===400?'E-mail ou mot de passe incorrect':err.message)}
+});
+let delArmed=null;
+$('#stAdmin').addEventListener('click',async e=>{
+  const f=e.target.closest('[data-f]');if(f){adminFilter=f.dataset.f;drawAdmin();return}
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const act=b.dataset.act;
+  if(act==='refresh')return renderAdmin();
+  if(act==='logout'){adminTok=null;sess.set('admin',null);toast('Déconnecté');return renderAdmin()}
+  const card=b.closest('.req'),id=card.dataset.id,row=adminRows.find(r=>r.id===id);
+  const val=k=>{const i=card.querySelector(`[data-k="${k}"]`);return i?i.value.trim():undefined};
+  const fields={};
+  for(const k of ['lien','cle_diffusion','logo']){const v=val(k);if(v!==undefined){if(v&&!/^https:\/\//i.test(v)){toast('Les liens doivent commencer par https://');return}fields[k]=v||null}}
+  try{
+    if(act==='test'){
+      const l=fields.lien;if(!l){toast("Aucun lien de lecture à tester");return}
+      b.textContent='Test…';
+      const ok=row.type==='tv'?await probe(l):null;
+      b.textContent='Tester le lien';
+      if(ok===false){toast('Le lien ne répond pas');return}
+      closeSheet();
+      if(mode!==row.type)setMode(row.type);
+      playStation(row.type==='tv'?{id:'p-'+id,name:row.nom,urls:[l],favicon:fields.logo||'',q:'',part:false,country:'Test admin'}
+        :{id:'p-'+id,name:row.nom,url:l,favicon:fields.logo||'',tags:'Test admin',country:'',bitrate:0,hls:/\.m3u8/i.test(l)});
+      return;
+    }
+    if(act==='copy'){
+      const k=fields.cle_diffusion;if(!k){toast("Ajoutez d'abord la clé de diffusion");return}
+      try{await navigator.clipboard.writeText(k);toast('Clé copiée : envoyez-la au partenaire')}catch(err){card.querySelector('[data-k="cle_diffusion"]').select();toast('Sélectionnée : copiez-la')}
+      return;
+    }
+    if(act==='del'){
+      if(delArmed!==id){delArmed=id;b.textContent='Confirmer la suppression';return}
+      await sb('/rest/v1/chaines?id=eq.'+encodeURIComponent(id),{method:'DELETE',token:adminTok});
+      delArmed=null;toast('Demande supprimée');
+    }else{
+      if(act==='valide'&&!fields.lien){toast('Ajoutez le lien de lecture avant de valider');return}
+      if(act==='valide'||act==='refuse')fields.statut=act;
+      await sb('/rest/v1/chaines?id=eq.'+encodeURIComponent(id),{method:'PATCH',token:adminTok,prefer:'return=minimal',body:fields});
+      toast(act==='valide'?'Chaîne validée : elle est visible dans Partenaires':act==='refuse'?'Demande refusée':'Enregistré');
+    }
+    partnersCache=null;await renderAdmin();
+  }catch(err){
+    if(err.status===401||err.status===403){adminTok=null;sess.set('admin',null);toast('Session expirée : reconnectez-vous');renderAdmin();return}
+    toast(err.message);
+  }
+});
+
+/* --- Studio direct (WHIP : Livepeer Studio, Cloudflare Stream…) --- */
+let live={pc:null,stream:null,res:null,t0:0,timer:null,lock:null};
+try{$('#sKey').value=localStorage.getItem('gjmradio_whip')||''}catch(e){}
+const syncStudio=()=>{$('#sCamWrap').hidden=$('#sKind').value!=='tv'};
+$('#sKind').onchange=syncStudio;syncStudio();
+function sStatus(t){$('#sStatus').textContent=t}
+async function startLive(){
+  const key=$('#sKey').value.trim();
+  if(!/^https:\/\//i.test(key)){toast('Collez votre clé de diffusion (elle commence par https://)');return}
+  try{localStorage.setItem('gjmradio_whip',key)}catch(e){}
+  if(!navigator.mediaDevices||!window.RTCPeerConnection){toast("Ce navigateur ne permet pas de diffuser. Utilisez Chrome ou Kiwi.");return}
+  if(wantPlay)pause();
+  $('#sStart').disabled=true;sStatus('Accès à la caméra et au micro…');
+  try{
+    const tv=$('#sKind').value==='tv';
+    live.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},
+      video:tv?{facingMode:$('#sCam').value,width:{ideal:1280},height:{ideal:720},frameRate:{ideal:25}}:false});
+    const v=$('#sVideo');v.srcObject=live.stream;$('#sIdle').hidden=true;
+    sStatus('Connexion au serveur de diffusion…');
+    const pc=live.pc=new RTCPeerConnection({bundlePolicy:'max-bundle',iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+    live.stream.getTracks().forEach(t=>pc.addTransceiver(t,{direction:'sendonly',streams:[live.stream]}));
+    await pc.setLocalDescription(await pc.createOffer());
+    await new Promise(res=>{if(pc.iceGatheringState==='complete')return res();const to=setTimeout(res,2500);pc.addEventListener('icegatheringstatechange',()=>{if(pc.iceGatheringState==='complete'){clearTimeout(to);res()}})});
+    let url=key;
+    try{const hr=await fetch(key,{method:'HEAD'});if(hr.url)url=hr.url}catch(e){}   // Livepeer : redirection vers le serveur régional
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/sdp'},body:pc.localDescription.sdp});
+    if(!r.ok)throw new Error(r.status===401||r.status===403||r.status===404?'Clé de diffusion refusée. Vérifiez-la avec GJM Tecnologie.':'Le serveur de diffusion a refusé la connexion ('+r.status+').');
+    const loc=r.headers.get('Location');live.res=loc?new URL(loc,url).href:null;
+    await pc.setRemoteDescription({type:'answer',sdp:await r.text()});
+    pc.addEventListener('connectionstatechange',()=>{
+      const s=pc.connectionState;
+      if(s==='connected')sStatus('En direct. Les utilisateurs vous voient dans l\'onglet Partenaires (quelques secondes de décalage).');
+      if(s==='disconnected')sStatus('Connexion instable… le direct essaie de reprendre.');
+      if(s==='failed'){toast('Le direct a été coupé');stopLive()}
+    });
+    live.t0=Date.now();$('#sPill').hidden=false;$('#sStart').hidden=true;$('#sStop').hidden=false;
+    live.timer=setInterval(()=>{const s=Math.floor((Date.now()-live.t0)/1000);$('#sPill').textContent=`EN DIRECT · ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`},1000);
+    try{live.lock=await navigator.wakeLock.request('screen')}catch(e){}
+    sStatus('Connecté. Démarrage du direct…');
+  }catch(err){
+    const m=/SessionDescription|setRemoteDescription/i.test(err.message||'')?'Le serveur de diffusion a donné une réponse invalide. Vérifiez la clé de diffusion.':err.name==='TypeError'?'Impossible de joindre le serveur de diffusion. Vérifiez la connexion et la clé.':err.name==='NotAllowedError'?"Autorisez la caméra et le micro pour diffuser (icône à gauche de l'adresse).":err.name==='NotFoundError'?'Aucune caméra ou micro trouvé.':(err.message||'Le direct n\'a pas pu démarrer.');
+    toast(m);sStatus(m);stopLive(true);
+  }finally{$('#sStart').disabled=false}
+}
+function stopLive(silent){
+  clearInterval(live.timer);
+  if(live.res)fetch(live.res,{method:'DELETE'}).catch(()=>{});
+  if(live.pc)try{live.pc.close()}catch(e){}
+  if(live.stream)live.stream.getTracks().forEach(t=>t.stop());
+  try{live.lock&&live.lock.release()}catch(e){}
+  live={pc:null,stream:null,res:null,t0:0,timer:null,lock:null};
+  $('#sVideo').srcObject=null;$('#sIdle').hidden=false;$('#sPill').hidden=true;$('#sPill').textContent='EN DIRECT';
+  $('#sStart').hidden=false;$('#sStop').hidden=true;
+  if(!silent){sStatus('Direct arrêté.');toast('Direct arrêté')}
+}
+$('#sStart').onclick=startLive;$('#sStop').onclick=()=>stopLive();
+window.addEventListener('beforeunload',e=>{if(live.pc){e.preventDefault();e.returnValue=''}});
+
+loadCfg();
 setMode(mode,true);
 loadProg();
 </script>

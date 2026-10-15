@@ -14,6 +14,9 @@ Application installable (PWA) avec deux modes :
 | icon-192.png, icon-512.png, icon-maskable-512.png | Icônes de l'appli (votre logo) |
 | logo.png | Logo affiché dans l'appli |
 | programme.json | Les programmes des chaînes et radios (à compléter, voir plus bas) |
+| config.json | Lien vers votre base Supabase pour l'espace « Diffuser » (à remplir, voir DIFFUSER.md) |
+| supabase.sql | Script à coller une fois dans Supabase (pas utilisé par l'appli elle-même) |
+| DIFFUSER.md | Guide de l'espace « Diffuser » : partenaires, administration, Studio direct |
 
 ## Mise en ligne sur GitHub Pages (étape par étape)
 
@@ -21,7 +24,7 @@ Application installable (PWA) avec deux modes :
 2. Cliquez sur **+** (en haut à droite) → **New repository**.
 3. Nom du dépôt : `gjm-radio`. Cochez **Public**. Cliquez **Create repository**.
 4. Sur la page du dépôt vide, cliquez **uploading an existing file**.
-5. Décompressez `gjm-radio.zip` sur votre ordinateur, puis glissez **les 9 fichiers** (pas le dossier) dans la zone d'envoi.
+5. Décompressez `gjm-radio.zip` sur votre ordinateur, puis glissez **les 12 fichiers** (pas le dossier) dans la zone d'envoi.
 6. En bas, cliquez **Commit changes**.
 7. Allez dans **Settings** → **Pages** (menu de gauche).
 8. Sous **Branch**, choisissez `main` et le dossier `/ (root)`, puis **Save**.
@@ -37,10 +40,11 @@ Application installable (PWA) avec deux modes :
 
 ## Utilisation
 
+- **Diffuser** (bouton en haut à droite) : d'autres personnes proposent leur radio ou leur télé, ou diffusent en direct depuis leur téléphone (Studio direct). Vous validez dans l'**Espace administrateur** (lien en bas de l'appli), puis la chaîne apparaît dans l'onglet **Partenaires**. Mise en route : voir **DIFFUSER.md**.
 - **Radio / Télé** : le grand bouton en haut passe d'un mode à l'autre. Favoris, récentes et chaînes ajoutées sont séparés pour chaque mode.
 - **Plein écran** (mode Télé) : bouton à droite des commandes, ou double-touche sur l'image. Le téléphone passe à l'horizontale.
-- **Onglets Radio** : Côte d'Ivoire, Afrique, France, Sport, Monde, Favoris, Récentes, Mes radios.
-- **Onglets Télé** : TNT, Côte d'Ivoire, Afrique, France & Info, Sport, Documentaires, Séries, Films & Nollywood, Favoris, Récentes, Mes chaînes. Dans Sport, Documentaires, Séries et Films, les chaînes en français sont en tête, puis celles en anglais.
+- **Onglets Radio** : Côte d'Ivoire, Partenaires, Afrique, France, Sport, Monde, Favoris, Récentes, Mes radios.
+- **Onglets Télé** : TNT, Partenaires, Côte d'Ivoire, Afrique, France & Info, Sport, Documentaires, Séries, Films & Nollywood, Favoris, Récentes, Mes chaînes. Dans Sport, Documentaires, Séries et Films, les chaînes en français sont en tête, puis celles en anglais.
 - **TNT** : les 7 chaînes de la TNT ivoirienne, dans l'ordre des canaux.
   - RTI 1 et 7 Info : direct dans l'appli (si le direct de RTI 1 ne répond pas, un bouton ouvre RTI Play).
   - RTI 2 et La 3 : bouton « Regarder sur RTI Play », la plateforme officielle et gratuite de la RTI.
@@ -109,7 +113,7 @@ Si l'appli n'affiche plus aucun programme après une modification, c'est qu'il m
 - Les catégories (Sport, Documentaires, Séries, Films) ne contiennent que des chaînes gratuites. Les grandes chaînes de sport (Canal+ Sport, beIN Sports principales, NBA…) et de Nollywood (Africa Magic, ROK, Nollywood TV) sont payantes et n'y sont donc pas. Certaines chaînes gratuites (Pluto TV, par exemple) peuvent être bloquées selon le pays : l'appli l'indique alors comme indisponible.
 - La télé ne contient que des chaînes **gratuites** diffusées publiquement. Les chaînes payantes (bouquets Canal+, etc.) ne sont pas incluses et ne doivent pas être ajoutées : les diffuser sans droits est illégal, surtout dans une appli vendue.
 - Certaines chaînes n'émettent pas 24h/24 (indiqué dans la liste) ou changent de lien. Si un lien ne marche pas, l'appli essaie automatiquement les autres liens de la chaîne. La liste se met à jour toute seule.
-- Pour une mise à jour : renvoyez le nouveau `index.html` dans le dépôt, et dans `sw.js` changez `gjm-radio-v9` en `gjm-radio-v10` (puis v11, etc.). Ce n'est pas nécessaire quand vous modifiez seulement `programme.json`.
+- Pour une mise à jour : renvoyez le nouveau `index.html` dans le dépôt, et dans `sw.js` changez `gjm-radio-v12` en `gjm-radio-v13` (puis v14, etc.). Ce n'est pas nécessaire quand vous modifiez seulement `programme.json`.
 
 ## Si un onglet reste vide après une mise à jour
 
