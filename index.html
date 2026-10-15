@@ -210,6 +210,33 @@ input[type=range]{flex:1;accent-color:var(--gold)}
 .studio-prev video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
 .live-pill{position:absolute;top:10px;left:10px;background:var(--danger);color:#fff;font-weight:800;font-size:12px;border-radius:6px;padding:3px 8px;z-index:2}
 .linkbtn2{background:none;border:none;color:var(--muted);text-decoration:underline;font-size:12.5px;padding:6px}
+/* Bande d'infos défilante */
+.ticker{display:flex;align-items:stretch;background:var(--gold);color:var(--navy);border-bottom:2px solid #fff;overflow:hidden;
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tk-label{flex:none;display:flex;align-items:center;gap:6px;background:var(--navy);color:var(--gold);font-weight:800;font-size:12px;letter-spacing:.08em;padding:8px 12px;border-right:2px solid #fff}
+.tk-label::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--danger);animation:pulse 1.4s infinite}
+.tk-track{flex:1;min-width:0;overflow:hidden;display:flex;align-items:center}
+.tk-move{display:inline-flex;white-space:nowrap;font-weight:800;font-size:14.5px;padding:8px 0;animation:tk var(--tk-d,30s) linear infinite;will-change:transform}
+.tk-move span{padding-right:56px}
+.ticker:hover .tk-move,.ticker:active .tk-move{animation-play-state:paused}
+@keyframes tk{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.tk-move{animation:none!important;white-space:normal}.tk-move span+span{display:none}}
+/* Emplacement publicitaire */
+.adslot{margin-top:14px;border:2px solid #fff;border-radius:16px;overflow:hidden;background:var(--navy-2);position:relative}
+.ad-label{position:absolute;top:8px;left:8px;z-index:2;background:rgba(4,10,22,.8);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border:1.5px solid #fff;border-radius:6px;padding:2px 7px}
+.ad-card{display:grid;text-decoration:none;color:inherit}
+.ad-card img{width:100%;max-width:100%;max-height:200px;object-fit:cover;display:block;background:#000}
+.ad-txt{padding:10px 14px 12px;display:grid;gap:2px}
+.ad-txt b{font-size:15.5px}
+.ad-txt span{color:var(--muted);font-size:13px}
+.ad-dots{position:absolute;right:10px;top:10px;display:flex;gap:5px;z-index:2}
+.ad-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.45);border:1px solid #fff}
+.ad-dots i.on{background:var(--gold)}
+.adm-nav{padding-bottom:10px;border-bottom:2px solid var(--line)}
+.adm-item{border:2px solid #fff;border-radius:14px;padding:12px;display:grid;gap:8px;background:var(--navy-2)}
+.adm-item img{max-width:100%;max-height:140px;object-fit:cover;border-radius:10px;border:1.5px solid #fff}
+.adm-item.off{opacity:.55}
+.add input[type=file]{color:var(--ink)}
 /* Onglets : tous visibles (retour à la ligne), texte blanc et gras */
 .tabs{flex-wrap:wrap;overflow:visible!important;gap:8px}
 .tab{color:#ffffff!important;font-weight:800!important;background:var(--navy-2)}
@@ -235,6 +262,10 @@ input[type=range]{flex:1;accent-color:var(--gold)}
 </style>
 </head>
 <body>
+<div class="ticker" id="ticker" hidden aria-label="Informations">
+  <span class="tk-label">INFOS</span>
+  <div class="tk-track"><div class="tk-move" id="tkMove"></div></div>
+</div>
 <div class="wrap">
   <header class="top">
     <div class="brand">
@@ -292,6 +323,12 @@ input[type=range]{flex:1;accent-color:var(--gold)}
       <ul class="prog-list" id="progList"></ul>
     </div>
   </section>
+
+  <aside class="adslot" id="adSlot" hidden aria-label="Publicité">
+    <span class="ad-label">Publicité</span>
+    <div class="ad-dots" id="adDots"></div>
+    <div id="adBox"></div>
+  </aside>
 
   <nav class="tabs" role="tablist" id="tabs"></nav>
 
@@ -1148,7 +1185,7 @@ window.addEventListener('online',()=>toast('Connexion rétablie'));
 /* ---------- Démarrage ---------- */
 /* ================= Espace « Diffuser » ================= */
 const sess={get(k){try{return sessionStorage.getItem('gjmradio_'+k)}catch(e){return null}},set(k,v){try{v==null?sessionStorage.removeItem('gjmradio_'+k):sessionStorage.setItem('gjmradio_'+k,v)}catch(e){}}};
-let adminTok=sess.get('admin'),adminFilter='attente',adminRows=[];
+let adminTok=sess.get('admin'),adminFilter='attente',adminRows=[],adminSec='demandes',adminInfos=[],adminPubs=[];
 function openSheet(tab){
   $('#sheet').hidden=false;document.body.style.overflow='hidden';
   if(tab==='admin'||adminTok)$('#stAdminTab').hidden=false;
@@ -1209,19 +1246,57 @@ async function renderAdmin(){
       <button class="btn-gold" type="submit">Se connecter</button></form>`;
     return;
   }
-  box.innerHTML='<p class="help">Chargement des demandes…</p>';
-  try{adminRows=await sb('/rest/v1/chaines?select=*&order=created_at.desc',{token:adminTok})}
+  box.innerHTML='<p class="help">Chargement…</p>';
+  try{
+    [adminRows,adminInfos,adminPubs]=await Promise.all([
+      sb('/rest/v1/chaines?select=*&order=created_at.desc',{token:adminTok}),
+      sb('/rest/v1/annonces?select=*&order=created_at.desc',{token:adminTok}).catch(()=>[]),
+      sb('/rest/v1/pubs?select=*&order=ordre.asc,created_at.desc',{token:adminTok}).catch(()=>[])]);
+  }
   catch(e){if(e.status===401||e.status===403){adminTok=null;sess.set('admin',null);toast('Session expirée : reconnectez-vous');return renderAdmin()}
     box.innerHTML=`<p class="help">${esc(e.message)}</p>`;return}
-  drawAdmin();
+  drawSection();
+}
+function adminNav(){
+  const s=[['demandes','Demandes de chaînes'],['infos','Infos défilantes'],['pubs','Publicités']];
+  return `<div class="btns adm-nav">${s.map(([k,l])=>`<button data-sec="${k}" class="${k===adminSec?'go':''}">${l}</button>`).join('')}
+    <button data-act="refresh">Actualiser</button><button data-act="logout">Se déconnecter</button></div>`;
+}
+function drawSection(){adminSec==='infos'?drawInfos():adminSec==='pubs'?drawPubs():drawAdmin()}
+const fdate=d=>{try{return new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return ''}};
+function drawInfos(){
+  $('#stAdmin').innerHTML=`${adminNav()}
+    <form class="add" id="infoForm"><p class="help">Ce texte défile en haut de l'appli, chez tous les utilisateurs (dans les 5 minutes).</p>
+      <label>Nouvelle information<textarea id="iTxt" required minlength="2" maxlength="300" placeholder="Ex. Ce soir à 20h : grand concert en direct sur Radio Saint Ignace !"></textarea></label>
+      <button class="btn-gold" type="submit">Publier l'information</button></form>
+    ${adminInfos.length?'':'<p class="help">Aucune information publiée.</p>'}
+    ${adminInfos.map(i=>`<div class="adm-item${i.actif?'':' off'}" data-iid="${esc(i.id)}">
+      <div>${esc(i.texte)}</div><div class="req meta" style="border:0;padding:0;background:none">${i.actif?'Affichée':'Masquée'} · publiée le ${fdate(i.created_at)}</div>
+      <div class="btns"><button data-ia="toggle">${i.actif?'Masquer':'Afficher'}</button><button class="no" data-ia="del">Supprimer</button></div></div>`).join('')}`;
+}
+function drawPubs(){
+  $('#stAdmin').innerHTML=`${adminNav()}
+    <form class="add" id="pubForm"><p class="help">La pub s'affiche sous le lecteur, chez tous les utilisateurs. S'il y en a plusieurs, elles tournent toutes les 8 secondes.</p>
+      <label>Titre<input id="adT" required maxlength="80" placeholder="Ex. MD Multiservice : pressing express"></label>
+      <label>Texte court (facultatif)<input id="adX" maxlength="200" placeholder="Ex. -20 % cette semaine, Cocody Angré"></label>
+      <label>Image (photo ou affiche)<input id="adF" type="file" accept="image/*"></label>
+      <label>…ou lien d'une image déjà en ligne<input id="adU" type="url" placeholder="https://…/affiche.jpg"></label>
+      <label>Lien quand on touche la pub (facultatif)<input id="adL" placeholder="https://wa.me/2250700000000 ou https://site.com"></label>
+      <div class="row2"><label>Fin de diffusion (facultatif)<input id="adE" type="date"></label>
+        <label>Ordre d'affichage<input id="adO" type="number" value="0" min="0" max="99"></label></div>
+      <button class="btn-gold" type="submit" id="adSend">Publier la pub</button></form>
+    ${adminPubs.length?'':'<p class="help">Aucune publicité.</p>'}
+    ${adminPubs.map(p=>{const exp=p.fin&&p.fin<today();return `<div class="adm-item${p.actif&&!exp?'':' off'}" data-pid="${esc(p.id)}">
+      <img src="${esc(p.image)}" alt=""><b>${esc(p.titre)}</b>${p.texte?`<div>${esc(p.texte)}</div>`:''}
+      <div class="meta" style="color:var(--muted);font-size:13px;word-break:break-word">${exp?'Terminée':p.actif?'En ligne':'Masquée'}${p.fin?' · jusqu\'au '+fdate(p.fin):''} · ordre ${p.ordre}${p.lien?'<br>Lien : '+esc(p.lien):''}</div>
+      <div class="btns"><button data-pa="toggle">${p.actif?'Masquer':'Afficher'}</button><button class="no" data-pa="del">Supprimer</button></div></div>`}).join('')}`;
 }
 function drawAdmin(){
   const n=s=>adminRows.filter(r=>r.statut===s).length;
   const rows=adminRows.filter(r=>r.statut===adminFilter);
   const lbl={attente:'En attente',valide:'Validées',refuse:'Refusées'};
   const date=d=>{try{return new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return ''}};
-  $('#stAdmin').innerHTML=`<div class="btns" id="aFilters">${['attente','valide','refuse'].map(s=>`<button data-f="${s}" class="${s===adminFilter?'go':''}">${lbl[s]} (${n(s)})</button>`).join('')}
-      <button data-act="refresh">Actualiser</button><button data-act="logout">Se déconnecter</button></div>
+  $('#stAdmin').innerHTML=`${adminNav()}<div class="btns" id="aFilters">${['attente','valide','refuse'].map(s=>`<button data-f="${s}" class="${s===adminFilter?'go':''}">${lbl[s]} (${n(s)})</button>`).join('')}</div>
     ${rows.length?'':`<p class="help">Aucune demande ${lbl[adminFilter].toLowerCase()}.</p>`}
     ${rows.map(r=>`<div class="req" data-id="${esc(r.id)}">
       <h3>${esc(r.nom)} <span class="badge b-${esc(r.statut)}">${lbl[r.statut]}</span> <span class="badge">${r.type==='tv'?'Télé':'Radio'}</span> <span class="badge">${r.mode==='studio'?'Studio':'Lien'}</span></h3>
@@ -1239,6 +1314,70 @@ function drawAdmin(){
         <button class="no" data-act="del">Supprimer</button>
       </div></div>`).join('')}`;
 }
+/* --- Admin : infos et pubs --- */
+function admErr(err){
+  if(err.status===401||err.status===403){adminTok=null;sess.set('admin',null);toast('Session expirée : reconnectez-vous');renderAdmin();return}
+  toast(err.message||'Action impossible');
+}
+// Réduit la photo (max 1200 px, JPEG) pour qu'elle charge vite chez les utilisateurs
+function shrink(file){
+  return new Promise((res,rej)=>{
+    const img=new Image(),u=URL.createObjectURL(file);
+    img.onload=()=>{const k=Math.min(1,1200/Math.max(img.width,img.height)),c=document.createElement('canvas');
+      c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error('Image illisible')),'image/jpeg',.85)};
+    img.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('Ce fichier n\'est pas une image lisible'))};
+    img.src=u;
+  });
+}
+async function uploadPub(file){
+  const blob=await shrink(file),path=`pub-${Date.now()}.jpg`;
+  let r;
+  try{r=await fetch(`${CFG.url}/storage/v1/object/pubs/${path}`,{method:'POST',headers:{apikey:CFG.key,Authorization:'Bearer '+adminTok,'Content-Type':'image/jpeg'},body:blob})}
+  catch(e){throw Object.assign(new Error('Pas de connexion internet.'),{status:0})}
+  if(!r.ok){let m='';try{m=(await r.json()).message||''}catch(e){}throw Object.assign(new Error("Envoi de l'image impossible"+(m?' : '+m:'')),{status:r.status===400&&/jwt|token/i.test(m)?401:r.status})}
+  return `${CFG.url}/storage/v1/object/public/pubs/${path}`;
+}
+$('#stAdmin').addEventListener('submit',async e=>{
+  if(e.target.id==='infoForm'){
+    e.preventDefault();
+    try{await sb('/rest/v1/annonces',{method:'POST',token:adminTok,prefer:'return=minimal',body:{texte:$('#iTxt').value.trim()}});
+      toast('Information publiée');await renderAdmin();loadBroadcast()}catch(err){admErr(err)}
+  }
+  if(e.target.id==='pubForm'){
+    e.preventDefault();
+    const b=$('#adSend');if(b.disabled)return;
+    const f=$('#adF').files[0],u=$('#adU').value.trim(),l=$('#adL').value.trim();
+    if(!f&&!/^https:\/\//i.test(u)){toast('Choisissez une image, ou collez le lien https d\'une image');return}
+    if(l&&!/^(https:\/\/|tel:|mailto:)/i.test(l)){toast('Le lien doit commencer par https://');return}
+    b.disabled=true;b.textContent='Envoi…';
+    try{
+      const image=f?await uploadPub(f):u;
+      await sb('/rest/v1/pubs',{method:'POST',token:adminTok,prefer:'return=minimal',body:{titre:$('#adT').value.trim(),texte:$('#adX').value.trim()||null,
+        image,lien:l||null,fin:$('#adE').value||null,ordre:+$('#adO').value||0}});
+      toast('Publicité en ligne');await renderAdmin();loadBroadcast();
+    }catch(err){admErr(err)}
+    finally{b.disabled=false;b.textContent='Publier la pub'}
+  }
+});
+let delArmed2=null;
+$('#stAdmin').addEventListener('click',async e=>{
+  const s=e.target.closest('[data-sec]');if(s){adminSec=s.dataset.sec;drawSection();return}
+  const ia=e.target.closest('[data-ia]'),pa=e.target.closest('[data-pa]');if(!ia&&!pa)return;
+  const btn=ia||pa,act=btn.dataset.ia||btn.dataset.pa;
+  const card=btn.closest('[data-iid],[data-pid]'),id=card.dataset.iid||card.dataset.pid,table=ia?'annonces':'pubs';
+  const row=(ia?adminInfos:adminPubs).find(x=>x.id===id);
+  try{
+    if(act==='del'){
+      if(delArmed2!==id){delArmed2=id;btn.textContent='Confirmer';return}
+      await sb(`/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`,{method:'DELETE',token:adminTok});delArmed2=null;toast('Supprimé');
+    }else{
+      await sb(`/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',token:adminTok,prefer:'return=minimal',body:{actif:!row.actif}});
+      toast(row.actif?'Masqué':'Affiché');
+    }
+    await renderAdmin();loadBroadcast();
+  }catch(err){admErr(err)}
+});
 $('#stAdmin').addEventListener('submit',async e=>{
   if(e.target.id!=='admLogin')return;e.preventDefault();
   try{
@@ -1350,7 +1489,44 @@ function stopLive(silent){
 $('#sStart').onclick=startLive;$('#sStop').onclick=()=>stopLive();
 window.addEventListener('beforeunload',e=>{if(live.pc){e.preventDefault();e.returnValue=''}});
 
+/* ================= Infos défilantes et publicités ================= */
+let pubsList=[],pubIdx=0,pubTimer=null;
+const today=()=>new Date().toISOString().slice(0,10);
+function renderTicker(items){
+  const tk=$('#ticker');
+  if(!items.length){tk.hidden=true;return}
+  const txt=items.map(i=>esc(i.texte)).join('<b style="padding:0 18px">•</b>');
+  $('#tkMove').innerHTML=`<span>${txt}</span><span aria-hidden="true">${txt}</span>`;
+  const chars=items.reduce((n,i)=>n+i.texte.length,0);
+  $('#tkMove').style.setProperty('--tk-d',Math.max(14,Math.round(chars*0.22))+'s');
+  tk.hidden=false;
+}
+function showPub(k){
+  if(!pubsList.length)return;
+  pubIdx=(k+pubsList.length)%pubsList.length;
+  const p=pubsList[pubIdx],inner=`<img src="${esc(p.image)}" alt="${esc(p.titre)}" loading="lazy"><div class="ad-txt"><b>${esc(p.titre)}</b>${p.texte?`<span>${esc(p.texte)}</span>`:''}</div>`;
+  $('#adBox').innerHTML=p.lien?`<a class="ad-card" href="${esc(p.lien)}" target="_blank" rel="noopener sponsored">${inner}</a>`:`<div class="ad-card">${inner}</div>`;
+  $('#adDots').innerHTML=pubsList.length>1?pubsList.map((_,i)=>`<i class="${i===pubIdx?'on':''}"></i>`).join(''):'';
+}
+function renderPubs(items){
+  pubsList=items;clearInterval(pubTimer);
+  if(!items.length){$('#adSlot').hidden=true;return}
+  $('#adSlot').hidden=false;showPub(Math.min(pubIdx,items.length-1));
+  if(items.length>1)pubTimer=setInterval(()=>showPub(pubIdx+1),8000);
+}
+async function loadBroadcast(){
+  await loadCfg();if(!sbReady())return;
+  const [a,p]=await Promise.allSettled([
+    sb('/rest/v1/annonces?select=texte&actif=eq.true&order=created_at.desc'),
+    sb('/rest/v1/pubs?select=id,titre,texte,image,lien&actif=eq.true&or=(fin.is.null,fin.gte.'+today()+')&order=ordre.asc,created_at.desc')]);
+  if(a.status==='fulfilled')renderTicker(a.value||[]);
+  if(p.status==='fulfilled')renderPubs(p.value||[]);
+}
+setInterval(loadBroadcast,5*60e3);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadBroadcast()});
+
 loadCfg();
+loadBroadcast();
 setMode(mode,true);
 loadProg();
 </script>

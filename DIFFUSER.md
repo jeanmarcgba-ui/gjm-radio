@@ -105,6 +105,28 @@ Pour chaque partenaire « Studio », vous lui créez un direct chez le service d
 
 ---
 
+## Infos défilantes et publicités
+
+Mise en route, une seule fois : dans Supabase, **SQL Editor** → **New query**, collez tout le fichier `supabase_infos_pubs.sql`, puis **Run**.
+
+### Publier une information (bande défilante en haut de l'appli)
+1. Ouvrez l'**Espace administrateur**, puis **Infos défilantes**.
+2. Écrivez le texte (300 caractères au plus), puis touchez **Publier l'information**.
+3. L'info défile chez tous les utilisateurs dans les 5 minutes, ou dès qu'ils rouvrent l'appli.
+4. **Masquer** la retire sans l'effacer, **Afficher** la remet, **Supprimer** l'efface (touchez deux fois).
+5. Plusieurs infos actives défilent l'une après l'autre. Si aucune n'est active, la bande disparaît.
+
+### Publier une publicité (emplacement sous le lecteur)
+1. Ouvrez l'**Espace administrateur**, puis **Publicités**.
+2. Remplissez :
+   - **Titre** et **Texte court**, par exemple « -20 % cette semaine » ;
+   - **Image** : choisissez une photo ou une affiche du téléphone. Elle est réduite automatiquement. Vous pouvez aussi coller le lien d'une image déjà en ligne ;
+   - **Lien** : ce qui s'ouvre quand on touche la pub, par exemple `https://wa.me/2250700000000` pour WhatsApp, ou le site de l'annonceur ;
+   - **Fin de diffusion** : la pub disparaît toute seule après cette date. Pratique pour les pubs payées à la semaine ou au mois ;
+   - **Ordre** : 0 s'affiche en premier, puis 1, 2…
+3. Touchez **Publier la pub**. S'il y a plusieurs pubs, elles tournent toutes les 8 secondes.
+4. **Masquer**, **Afficher** et **Supprimer** marchent comme pour les infos.
+
 ## Bon à savoir
 - **Données mobiles** : un direct télé consomme environ 500 Mo à 1 Go par heure chez le diffuseur, et un direct radio environ 30 Mo par heure.
 - **Coûts** : avec Livepeer, au-delà de 1 000 minutes par mois ou de 100 spectateurs, le service devient payant. Surveillez votre tableau de bord.
