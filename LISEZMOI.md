@@ -63,6 +63,7 @@ Application installable (PWA) avec deux modes :
   4. L'onglet se reverrouille quand vous changez d'onglet, quand vous quittez l'appli, après 15 minutes, ou avec le bouton **Verrouiller**.
   5. Ces chaînes n'apparaissent ni dans Récentes, ni dans la recherche, ni sur l'écran de verrouillage du téléphone.
   6. Code oublié : touchez « Code oublié ? Tout effacer » deux fois. Le code et tous les liens 18+ sont supprimés.
+- **Langue** (bouton sous le volume) : en télé, choisissez la langue du son et les sous-titres quand la chaîne en propose, ou passez à la même chaîne dans une autre langue (ex. France 24 English → France 24 Français). En radio, l'appli propose des stations du même genre dans votre langue. Votre langue préférée est retenue. Une traduction automatique en direct n'est pas possible.
 - **Qualité** (mode Télé) : le bouton « Qualité » sous le volume ouvre le choix : Auto (selon la connexion), Économie 360p, Moyenne 480p, HD 720p, Full HD 1080p. Le choix est gardé pour toutes les chaînes. Si une chaîne n'existe pas dans la qualité choisie, l'appli prend la plus proche en dessous. Certaines chaînes n'ont qu'une seule qualité : l'appli l'indique.
 - **Programme** : le bouton « Programme » affiche la grille du jour et des 6 jours suivants pour la chaîne ou la radio choisie. Ce qui passe en ce moment s'affiche aussi sous le nom de la chaîne et dans la liste.
 - **Recherche** : tapez le nom d'une radio (Nostalgie, RFI, Fréquence 2…).
@@ -116,7 +117,7 @@ Si l'appli n'affiche plus aucun programme après une modification, c'est qu'il m
 - Les catégories (Sport, Documentaires, Séries, Films) ne contiennent que des chaînes gratuites. Les grandes chaînes de sport (Canal+ Sport, beIN Sports principales, NBA…) et de Nollywood (Africa Magic, ROK, Nollywood TV) sont payantes et n'y sont donc pas. Certaines chaînes gratuites (Pluto TV, par exemple) peuvent être bloquées selon le pays : l'appli l'indique alors comme indisponible.
 - La télé ne contient que des chaînes **gratuites** diffusées publiquement. Les chaînes payantes (bouquets Canal+, etc.) ne sont pas incluses et ne doivent pas être ajoutées : les diffuser sans droits est illégal, surtout dans une appli vendue.
 - Certaines chaînes n'émettent pas 24h/24 (indiqué dans la liste) ou changent de lien. Si un lien ne marche pas, l'appli essaie automatiquement les autres liens de la chaîne. La liste se met à jour toute seule.
-- Pour une mise à jour : renvoyez le nouveau `index.html` dans le dépôt, et dans `sw.js` changez `gjm-radio-v14` en `gjm-radio-v15` (puis v16, etc.). Ce n'est pas nécessaire quand vous modifiez seulement `programme.json`.
+- Pour une mise à jour : renvoyez le nouveau `index.html` dans le dépôt, et dans `sw.js` changez `gjm-radio-v16` en `gjm-radio-v17` (puis v18, etc.). Ce n'est pas nécessaire quand vous modifiez seulement `programme.json`.
 
 ## Si un onglet reste vide après une mise à jour
 

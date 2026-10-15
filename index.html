@@ -171,6 +171,8 @@ input[type=range]{flex:1;accent-color:var(--gold)}
 .qmenu p{margin:0;color:var(--muted);font-size:12.5px}
 .qopts{display:flex;flex-wrap:wrap;gap:6px}
 .qopts button{border:1px solid var(--line);background:none;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;color:var(--ink)}
+.lang-h{margin:6px 0 0;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--gold)}
+.qopts button small{font-weight:600;opacity:.75;margin-left:4px}
 .qopts button[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:var(--navy)}
 .tvscreen:fullscreen{border:none;border-radius:0}
 
@@ -334,9 +336,11 @@ input[type=range]{flex:1;accent-color:var(--gold)}
         <input type="range" id="vol" min="0" max="100" value="80" aria-label="Volume"></div>
       <span class="chip" id="sleepTxt" hidden></span>
       <button class="chip" id="qBtn" aria-expanded="false" hidden>Qualité : Auto</button>
+      <button class="chip" id="langBtn" aria-expanded="false">Langue</button>
       <button class="chip" id="progBtn" aria-expanded="false">Programme</button>
     </div>
     <div class="qmenu" id="qMenu" hidden></div>
+    <div class="qmenu" id="langMenu" hidden></div>
     <div class="prog" id="progPanel" hidden>
       <div class="prog-days" id="progDays"></div>
       <ul class="prog-list" id="progList"></ul>
@@ -764,6 +768,122 @@ function renderQMenu(){
   $('#qMenu').innerHTML=`<div class="qopts">${opts.map(([v,n])=>`<button data-q="${v}" aria-pressed="${String(prefQ)===String(v)}">${n}</button>`).join('')}</div><p>${note} « Économie » consomme environ 3 fois moins de données que « HD ».</p>`;
 }
 
+/* ---------- Langue : piste audio, sous-titres, autres versions de la chaîne ----------
+   Une vraie traduction en direct n'est pas possible ; on propose ce que les chaînes diffusent déjà. */
+const LANGS={fr:'Français',en:'English',ar:'العربية',es:'Español',pt:'Português',de:'Deutsch',sw:'Kiswahili'};
+const LANG_RB={fr:'french',en:'english',ar:'arabic',es:'spanish',pt:'portuguese',de:'german',sw:'swahili'};
+let prefLang=store.get('lang','fr'); if(!LANGS[prefLang])prefLang='fr';
+let prefSub=store.get('sub','off');         // 'off' ou code langue
+const LANG_WORDS={fr:/(fran[cç]ais|francais|french)/i,en:/(english|anglais)/i,ar:/(arabic|arabe|عربي)/i,
+  es:/(espa[nñ]ol|spanish|espagnol)/i,pt:/(portugu[eê]s|portuguese|portugais)/i,de:/(deutsch|german|allemand)/i,sw:/(kiswahili|swahili)/i};
+function codeOf(txt){
+  const t=String(txt||'').toLowerCase();
+  if(/^(fr|fre|fra)(-|$)/.test(t))return 'fr';if(/^(en|eng)(-|$)/.test(t))return 'en';if(/^(ar|ara)(-|$)/.test(t))return 'ar';
+  if(/^(es|spa)(-|$)/.test(t))return 'es';if(/^(pt|por)(-|$)/.test(t))return 'pt';if(/^(de|deu|ger)(-|$)/.test(t))return 'de';
+  for(const k in LANG_WORDS)if(LANG_WORDS[k].test(t))return k;
+  return '';
+}
+// langue d'une chaîne : d'après son nom, son identifiant (ex. France24.fr@English) ou la liste des langues
+function langOfCh(s){
+  const feed=(s.tid||'').split('@')[1]||'';
+  return codeOf(s.name)||codeOf(feed)||(LANG[s.tid]==='f'?'fr':LANG[s.tid]==='e'?'en':'');
+}
+// « famille » d'une chaîne : son nom sans la langue ni la qualité (France 24 English → france24)
+function familyOf(s){
+  let n=String(s.name||'').toLowerCase().replace(/\([^)]*\)/g,' ');
+  for(const k in LANG_WORDS)n=n.replace(new RegExp(LANG_WORDS[k].source,'gi'),' ');
+  return n.replace(/\b(hd|fhd|uhd|4k|sd|live|direct|tv)\b/g,' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+}
+function allTvChannels(){
+  const seen=new Set(),out=[];
+  const add=s=>{if(s&&s.urls&&s.urls.length&&!s.adult&&!seen.has(s.id)){seen.add(s.id);out.push(s)}};
+  for(const v of Object.values(cache.tv))if(Array.isArray(v))v.forEach(add);
+  list.forEach(add);D.tv.favs.forEach(add);D.tv.recents.forEach(add);
+  return out;
+}
+function siblingsOf(s){
+  if(!s||!s.urls)return [];
+  const f=familyOf(s);if(!f||f.length<3)return [];
+  return allTvChannels().filter(x=>x.id!==s.id&&familyOf(x)===f&&chState(x)!=='bad')
+    .sort((a,b)=>((langOfCh(b)===prefLang)-(langOfCh(a)===prefLang))||a.name.localeCompare(b.name));
+}
+function audioTracks(){
+  if(hls&&hls.audioTracks)return hls.audioTracks.map((t,i)=>({i,label:t.name||LANGS[codeOf(t.lang)]||t.lang||('Piste '+(i+1)),code:codeOf(t.lang)||codeOf(t.name),on:hls.audioTrack===i}));
+  const at=video.audioTracks;if(at&&at.length)return Array.from(at).map((t,i)=>({i,label:t.label||LANGS[codeOf(t.language)]||t.language||('Piste '+(i+1)),code:codeOf(t.language),on:t.enabled}));
+  return [];
+}
+function subTracks(){
+  if(hls&&hls.subtitleTracks)return hls.subtitleTracks.map((t,i)=>({i,label:t.name||LANGS[codeOf(t.lang)]||t.lang||('Sous-titres '+(i+1)),code:codeOf(t.lang)||codeOf(t.name),on:hls.subtitleTrack===i}));
+  const tt=Array.from(video.textTracks||[]).filter(t=>t.kind==='subtitles'||t.kind==='captions');
+  return tt.map((t,i)=>({i,label:t.label||LANGS[codeOf(t.language)]||t.language||('Sous-titres '+(i+1)),code:codeOf(t.language),on:t.mode==='showing'}));
+}
+function setAudioTrack(i){
+  if(hls&&hls.audioTracks&&hls.audioTracks.length){hls.audioTrack=i;return}
+  const at=video.audioTracks;if(at)Array.from(at).forEach((t,k)=>t.enabled=k===i);
+}
+function setSubTrack(i){
+  if(hls&&hls.subtitleTracks){hls.subtitleDisplay=i>=0;hls.subtitleTrack=i;return}
+  Array.from(video.textTracks||[]).filter(t=>t.kind==='subtitles'||t.kind==='captions').forEach((t,k)=>t.mode=k===i?'showing':'disabled');
+}
+function applyLangPref(){
+  const a=audioTracks();if(a.length<2)return;
+  const k=a.find(t=>t.code===prefLang);if(k&&!k.on)setAudioTrack(k.i);
+}
+function applySubPref(){
+  const s=subTracks();if(!s.length)return;
+  if(prefSub==='off'){setSubTrack(-1);return}
+  const k=s.find(t=>t.code===prefSub);setSubTrack(k?k.i:-1);
+}
+let radioSimilar=null,radioSimilarFor=null;
+async function loadRadioSimilar(s){
+  const key=(s&&s.id)+'|'+prefLang;if(radioSimilarFor===key)return;
+  radioSimilarFor=key;radioSimilar=null;
+  const tag=String(s.tags||'').split('·')[0].trim().toLowerCase();
+  const q=tag&&tag.length>2?`tag=${encodeURIComponent(tag)}&`:'';
+  try{
+    let r=await api(`/json/stations/search?${q}language=${LANG_RB[prefLang]}&${Q}&limit=12`);
+    if(!r.length&&q)r=await api(`/json/stations/search?language=${LANG_RB[prefLang]}&${Q}&limit=12`);
+    radioSimilar=cleanRadio(r).filter(x=>x.id!==s.id).slice(0,8);
+  }catch(e){radioSimilar=[]}
+  if(!$('#langMenu').hidden)renderLangMenu();
+}
+function refreshLang(){if(!$('#langMenu').hidden)renderLangMenu()}
+function renderLangMenu(){
+  const s=current&&playMode===mode?current:st().last,box=$('#langMenu');
+  const pref=`<p class="lang-h">Ma langue préférée</p><div class="qopts">${Object.entries(LANGS).map(([k,l])=>`<button data-pl="${k}" aria-pressed="${k===prefLang}">${l}</button>`).join('')}</div>`;
+  if(!s){box.innerHTML=`<p>Choisissez d'abord une ${cfg().one}.</p>${pref}`;return}
+  let html='';
+  if(mode==='tv'){
+    const a=wantPlay?audioTracks():[],sub=wantPlay?subTracks():[],sib=siblingsOf(s);
+    if(a.length>1)html+=`<p class="lang-h">Langue du son</p><div class="qopts">${a.map(t=>`<button data-at="${t.i}" aria-pressed="${t.on}">${esc(t.label)}</button>`).join('')}</div>`;
+    if(sub.length)html+=`<p class="lang-h">Sous-titres</p><div class="qopts"><button data-st2="-1" aria-pressed="${!sub.some(t=>t.on)}">Désactivés</button>${sub.map(t=>`<button data-st2="${t.i}" aria-pressed="${t.on}">${esc(t.label)}</button>`).join('')}</div>`;
+    if(sib.length)html+=`<p class="lang-h">${esc(s.name)} dans d'autres langues</p><div class="qopts">${sib.slice(0,8).map(x=>{const c=langOfCh(x);return `<button data-sib="${esc(x.id)}">${esc(x.name)}${c?`<small>${LANGS[c]}</small>`:''}</button>`}).join('')}</div>`;
+    if(!html)html=`<p>${wantPlay?'Cette chaîne ne diffuse qu\'une seule langue, sans sous-titres, et aucune autre version n\'a été trouvée.':'Lancez la chaîne pour voir les langues et sous-titres disponibles.'}</p>`;
+    html+=`<p>Une traduction automatique en direct n'est pas possible : l'appli propose les langues que la chaîne diffuse elle-même.</p>`;
+  }else{
+    html+=`<p>Une station de radio ne diffuse qu'une seule langue. Voici des stations du même genre en <b>${LANGS[prefLang]}</b> :</p>`;
+    if(radioSimilar===null){html+='<p>Recherche…</p>';loadRadioSimilar(s)}
+    else if(!radioSimilar.length)html+='<p>Aucune station trouvée pour le moment.</p>';
+    else html+=`<div class="qopts">${radioSimilar.map((x,i)=>`<button data-rs="${i}">${esc(x.name)}</button>`).join('')}</div>`;
+  }
+  box.innerHTML=html+pref;
+}
+$('#langBtn').onclick=async()=>{
+  const m=$('#langMenu');m.hidden=!m.hidden;$('#langBtn').setAttribute('aria-expanded',!m.hidden);$('#langBtn').classList.toggle('on',!m.hidden);
+  if(m.hidden)return;
+  renderLangMenu();
+  // charge aussi la liste France & Info (France 24, TV5…) pour trouver les autres langues
+  if(mode==='tv'&&!cache.tv.france){try{cache.tv.france=await loadTv('france');renderLangMenu()}catch(e){}}
+};
+$('#langMenu').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.pl){prefLang=b.dataset.pl;store.set('lang',prefLang);applyLangPref();radioSimilarFor=null;radioSimilar=null;renderLangMenu();toast('Langue préférée : '+LANGS[prefLang]);return}
+  if(b.dataset.at!==undefined){setAudioTrack(+b.dataset.at);const t=audioTracks().find(x=>x.i===+b.dataset.at);if(t&&t.code){prefLang=t.code;store.set('lang',prefLang)}setTimeout(renderLangMenu,300);return}
+  if(b.dataset.st2!==undefined){const i=+b.dataset.st2;setSubTrack(i);const t=subTracks().find(x=>x.i===i);prefSub=i<0?'off':(t&&t.code)||'off';store.set('sub',prefSub);setTimeout(renderLangMenu,300);return}
+  if(b.dataset.sib){const x=allTvChannels().find(c=>c.id===b.dataset.sib);if(x){playStation(x);toast(x.name)}return}
+  if(b.dataset.rs!==undefined){const x=radioSimilar[+b.dataset.rs];if(x)playStation(x)}
+});
+
 /* ---------- Programmes (fichier programme.json, heures d'Abidjan = GMT) ---------- */
 let PROG={tele:{},radio:{}};
 const JOURS=['dim','lun','mar','mer','jeu','ven','sam'];
@@ -987,6 +1107,7 @@ function showNow(s){
   $('#favNow').classList.toggle('on',isFav(s.id));
   if(mode==='radio')setDial(s);
   progDay=null;updateProgNow();
+  if(typeof refreshLang==='function'){radioSimilarFor=null;radioSimilar=null;refreshLang()}
 }
 function stopEngine(){
   if(hls){hls.destroy();hls=null}
@@ -1000,7 +1121,10 @@ function startUrl(){
   if(isHls&&!m.canPlayType('application/vnd.apple.mpegurl')&&window.Hls&&Hls.isSupported()){
     hls=new Hls({maxBufferLength:20,manifestLoadingTimeOut:12000});
     hls.loadSource(url);hls.attachMedia(m);
-    hls.on(Hls.Events.MANIFEST_PARSED,()=>{applyQuality();updateQBtn()});
+    hls.on(Hls.Events.MANIFEST_PARSED,()=>{applyQuality();updateQBtn();applyLangPref()});
+    hls.on(Hls.Events.AUDIO_TRACKS_UPDATED,()=>{applyLangPref();refreshLang()});
+    hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED,()=>{applySubPref();refreshLang()});
+    hls.on(Hls.Events.AUDIO_TRACK_SWITCHED,refreshLang);
     hls.on(Hls.Events.LEVEL_SWITCHED,updateQBtn);
     hls.on(Hls.Events.ERROR,(e,d)=>{
       if(!d.fatal)return;
@@ -1099,7 +1223,7 @@ function setMode(m,first){
   mode=m;store.set('mode',m);viewToken++;adultOpen=false;
   const tv=m==='tv',c=cfg();
   $('#modeRadio').setAttribute('aria-pressed',!tv);$('#modeTv').setAttribute('aria-pressed',tv);
-  $('#dial').hidden=tv;$('#tvScreen').hidden=!tv;$('#fs').hidden=!tv;$('#qMenu').hidden=true;updateQBtn();$('#tvIdle').hidden=false;resetIdle();
+  $('#dial').hidden=tv;$('#tvScreen').hidden=!tv;$('#fs').hidden=!tv;$('#qMenu').hidden=true;$('#langMenu').hidden=true;$('#langBtn').classList.remove('on');radioSimilarFor=null;updateQBtn();$('#tvIdle').hidden=false;resetIdle();
   $('#q').placeholder=c.search;$('#foot').textContent=c.foot;
   const [n,np,u,up,b]=c.form;
   $('#addNameLbl').textContent=n;$('#addName').placeholder=np;$('#addUrlLbl').textContent=u;$('#addUrl').placeholder=up;$('#addBtn').textContent=b;
