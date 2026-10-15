@@ -374,6 +374,7 @@ input[type=range]{flex:1;accent-color:var(--gold)}
 
   <p class="foot" id="foot"></p>
   <p class="foot"><button class="linkbtn2" id="adminLink">Espace administrateur</button></p>
+  <p class="foot"><button class="linkbtn2" id="updBtn">Actualiser l'appli</button> · <span id="appVer">version 19</span></p>
 </div>
 <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="sheet-in">
@@ -1417,7 +1418,28 @@ document.addEventListener('keydown',e=>{
 let deferred=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;$('#installBtn').hidden=false});
 $('#installBtn').onclick=async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;$('#installBtn').hidden=true};
-if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+/* ---------- Mises à jour : l'appli prend toute seule la nouvelle version ---------- */
+let swReg=null;
+if('serviceWorker' in navigator&&location.protocol.startsWith('http')){
+  const hadCtrl=!!navigator.serviceWorker.controller;let reloaded=false;
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{swReg=r}).catch(()=>{});
+  // nouvelle version installée : on recharge (sauf pendant une lecture, on attend la pause)
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!hadCtrl||reloaded)return;
+    const go=()=>{if(reloaded)return;reloaded=true;location.reload()};
+    if(!wantPlay)go();else{toast("Nouvelle version prête : elle s'installera à la prochaine pause");const t=setInterval(()=>{if(!wantPlay){clearInterval(t);go()}},2000)}
+  });
+  // à chaque retour dans l'appli, on vérifie s'il y a une nouvelle version
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&swReg)swReg.update().catch(()=>{})});
+}
+// Bouton « Actualiser l'appli » : vide l'ancienne copie (pas les favoris) et recharge la dernière version
+$('#updBtn').onclick=async()=>{
+  toast('Mise à jour en cours…');
+  try{if('caches' in window){const ks=await caches.keys();await Promise.all(ks.filter(k=>k.startsWith('gjm-radio-')).map(k=>caches.delete(k)))}}catch(e){}
+  try{if(swReg)await swReg.update()}catch(e){}
+  location.replace(location.pathname+'?maj='+Date.now());
+};
+if(/[?&]maj=/.test(location.search))history.replaceState(null,'',location.pathname);
 window.addEventListener('offline',()=>toast('Connexion internet perdue'));
 window.addEventListener('online',()=>toast('Connexion rétablie'));
 
