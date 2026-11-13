@@ -1,7 +1,7 @@
 // GJM Radio — service worker : garde l'interface disponible hors ligne.
 // Les flux radio, les vidéos et l'annuaire des stations passent toujours par le réseau.
-const VERSION = 'gjm-radio-v20';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'logo.png', 'programme.json', 'config.json', 'gjmtv.json'];
+const VERSION = 'gjm-radio-v21';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'logo.png', 'programme.json', 'config.json', 'gjmtv.json', 'sites.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => Promise.all(SHELL.map(f => c.add(f).catch(() => {})))).then(() => self.skipWaiting()));

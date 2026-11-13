@@ -374,7 +374,7 @@ input[type=range]{flex:1;accent-color:var(--gold)}
 
   <p class="foot" id="foot"></p>
   <p class="foot"><button class="linkbtn2" id="adminLink">Espace administrateur</button></p>
-  <p class="foot"><button class="linkbtn2" id="updBtn">Actualiser l'appli</button> · <span id="appVer">version 20</span></p>
+  <p class="foot"><button class="linkbtn2" id="updBtn">Actualiser l'appli</button> · <span id="appVer">version 21</span></p>
 </div>
 <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="sheet-in">
@@ -465,8 +465,8 @@ const MODES={
     form:['Nom de la radio','Ex. Radio paroissiale Saint Ignace','Adresse du flux (lien https du stream)','https://…/stream','Ajouter la radio']
   },
   tv:{
-    tabs:[['tnt','TNT'],['partenaires','Partenaires'],['ci',"Côte d'Ivoire"],['afrique','Afrique'],['france','France & Info'],['sport','Sport'],['doc','Documentaires'],['series','Séries'],['films','Films & Nollywood'],['enfants','Club des petits'],['fav','Favoris'],['recent','Récentes'],['mine','Mes chaînes'],['adulte','18+']],
-    titles:{partenaires:"Chaînes partenaires GJM",tnt:"TNT Côte d'Ivoire",ci:"Chaînes de Côte d'Ivoire",sport:"Chaînes de sport",doc:"Chaînes de documentaires",series:"Chaînes de séries et novelas",films:"Films et Nollywood",enfants:"Club des petits · chaînes pour enfants",afrique:"Chaînes d'Afrique",france:"Chaînes de France et d'info",fav:"Mes chaînes favorites",recent:"Regardées récemment",mine:"Mes chaînes ajoutées",adulte:"18+ · espace privé"},
+    tabs:[['tnt','TNT'],['partenaires','Partenaires'],['ci',"Côte d'Ivoire"],['afrique','Afrique'],['france','France & Info'],['sport','Sport'],['doc','Documentaires'],['series','Séries'],['films','Films & Nollywood'],['enfants','Club des petits'],['sites','Sites TV'],['fav','Favoris'],['recent','Récentes'],['mine','Mes chaînes'],['adulte','18+']],
+    titles:{partenaires:"Chaînes partenaires GJM",tnt:"TNT Côte d'Ivoire",ci:"Chaînes de Côte d'Ivoire",sport:"Chaînes de sport",doc:"Chaînes de documentaires",series:"Chaînes de séries et novelas",films:"Films et Nollywood",enfants:"Club des petits · chaînes pour enfants",sites:"Sites TV · directs sur le site officiel des chaînes",afrique:"Chaînes d'Afrique",france:"Chaînes de France et d'info",fav:"Mes chaînes favorites",recent:"Regardées récemment",mine:"Mes chaînes ajoutées",adulte:"18+ · espace privé"},
     one:'chaîne',many:'chaînes',search:'Rechercher une chaîne (ex. RTI, France 24, Africa 24)',
     idleName:'Choisissez une chaîne',idleMeta:'Touchez une chaîne dans la liste pour la regarder',
     foot:"Chaînes gratuites diffusées publiquement sur internet (liste libre iptv-org) · © GJM Tecnologie",
@@ -607,6 +607,17 @@ const TNT=[
   {n:6,name:'Life TV',re:/^life ?tv/i,info:"Life TV n'a pas de direct gratuit officiel sur internet. Elle se regarde sur la TNT (canal 6) et dans l'offre TV d'Orange."},
   {n:7,name:'7 Info',re:/^7 ?info/i}
 ];
+/* Sites TV : raccourcis vers les directs officiels sur le site des chaînes (fichier sites.json) */
+async function loadSites(){
+  const r=await fetch('sites.json',{cache:'no-cache'});if(!r.ok)throw new Error('reseau');
+  const j=await r.json();
+  return (j.sites||[]).filter(x=>x&&x.actif!==false&&/^https:\/\//i.test(x.lien||'')&&x.nom).map((x,i)=>{
+    let host='';try{host=new URL(x.lien).hostname}catch(e){}
+    return {id:'web-'+(x.id||x.nom.toLowerCase().replace(/[^a-z0-9]+/g,'-')),name:x.nom,urls:[],q:'',part:false,web:true,
+      favicon:x.logo||(host?'https://www.google.com/s2/favicons?sz=128&domain='+host:''),
+      link:x.lien,via:x.nom,country:(x.groupe?x.groupe+' · ':'')+(x.description||'Site officiel')};
+  });
+}
 async function loadTnt(){
   let ci=[];try{ci=await m3u('ci')}catch(e){}
   return TNT.map(t=>{
@@ -728,6 +739,7 @@ async function loadTv(t){
   if(t==='partenaires')return partnersFor('tv');
   if(t==='tnt')return loadTnt();
   if(t==='sport')return byLang(await cat('sports'));
+  if(t==='sites')return loadSites();
   if(t==='doc')return byLang(await cat('documentary'));
   if(t==='enfants'){   // Club des petits : dessins animés et chaînes jeunesse, en français d'abord
     const parts=await Promise.allSettled([cat('kids'),cat('animation')]);
@@ -1259,7 +1271,7 @@ function nextUrl(){
 function resetIdle(){$('#tvIdle').innerHTML='<div><img src="logo.png" alt=""><div>Choisissez une chaîne dans la liste</div></div>'}
 function offlineCard(s,afterFail){
   const box=$('#tvIdle');box.hidden=false;
-  const txt=afterFail?`Le direct ne répond pas dans l'appli pour le moment.`:s.link?`${esc(s.name)} diffuse son direct sur sa plateforme officielle.`:esc(s.info||"Pas de direct disponible sur internet pour cette chaîne.");
+  const txt=afterFail?`Le direct ne répond pas dans l'appli pour le moment.`:s.web?`${esc(s.country)}. Le direct s'ouvre sur le site officiel, dans votre navigateur.`:s.link?`${esc(s.name)} diffuse son direct sur sa plateforme officielle.`:esc(s.info||"Pas de direct disponible sur internet pour cette chaîne.");
   box.innerHTML=`<div><strong>${esc(s.name)}${s.tnt?' · TNT '+s.tnt:''}</strong><p>${txt}</p>${s.link?`<a class="btn-gold" href="${esc(s.link)}" target="_blank" rel="noopener">Regarder sur ${esc(s.via)}</a>`:''}</div>`;
 }
 function playStation(s){

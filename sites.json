@@ -1,0 +1,28 @@
+{
+  "aide": "Onglet « Sites TV » : chaque bouton ouvre le site officiel d'une chaîne qui diffuse son direct gratuitement. nom = nom affiché, lien = adresse https du site, groupe = rubrique, description = petite phrase, logo = lien d'une image (facultatif). actif false = site mis de côté. Mettez uniquement des sites officiels.",
+  "sites": [
+    { "groupe": "Côte d'Ivoire & Afrique", "nom": "RTI Play", "lien": "https://rtiplay.ci/", "description": "RTI 1, RTI 2, La 3 en direct et en replay" },
+    { "groupe": "Côte d'Ivoire & Afrique", "nom": "NCI", "lien": "https://www.nci.ci/", "description": "Le direct de NCI" },
+    { "groupe": "Côte d'Ivoire & Afrique", "nom": "Africanews", "lien": "https://fr.africanews.com/", "description": "Infos Afrique en continu" },
+    { "groupe": "Côte d'Ivoire & Afrique", "nom": "RTS Sénégal", "lien": "https://www.rts.sn/", "description": "Télévision publique sénégalaise" },
+    { "groupe": "Côte d'Ivoire & Afrique", "nom": "CRTV Cameroun", "lien": "https://www.crtv.cm/", "description": "Télévision publique camerounaise" },
+
+    { "groupe": "Infos internationales", "nom": "France 24", "lien": "https://www.france24.com/fr/direct", "description": "Infos en français 24h/24" },
+    { "groupe": "Infos internationales", "nom": "TV5Monde", "lien": "https://www.tv5monde.com/", "description": "La chaîne francophone internationale" },
+    { "groupe": "Infos internationales", "nom": "Euronews", "lien": "https://fr.euronews.com/live", "description": "Infos en français en direct" },
+    { "groupe": "Infos internationales", "nom": "RFI", "lien": "https://www.rfi.fr/fr/", "description": "Radio France Internationale · infos Afrique" },
+
+    { "groupe": "France (parfois bloqué hors de France)", "nom": "france.tv", "lien": "https://www.france.tv/", "description": "France 2, France 3, France 4, France 5" },
+    { "groupe": "France (parfois bloqué hors de France)", "nom": "TF1+", "lien": "https://www.tf1.fr/", "description": "TF1, TMC, LCI… (compte gratuit)" },
+    { "groupe": "France (parfois bloqué hors de France)", "nom": "M6+", "lien": "https://www.m6.fr/", "description": "M6, W9, Gulli… (compte gratuit)" },
+    { "groupe": "France (parfois bloqué hors de France)", "nom": "BFM TV", "lien": "https://www.bfmtv.com/en-direct/", "description": "Infos en continu" },
+
+    { "groupe": "Sport", "nom": "FIFA+", "lien": "https://www.plus.fifa.com/", "description": "Matchs et compétitions diffusés par la FIFA" },
+    { "groupe": "Sport", "nom": "CAF TV", "lien": "https://www.youtube.com/user/MyAfricanFootball", "description": "Chaîne YouTube officielle du football africain" },
+    { "groupe": "Sport", "nom": "Olympics", "lien": "https://www.olympics.com/fr/", "description": "Sports olympiques" },
+    { "groupe": "Sport", "nom": "Red Bull TV", "lien": "https://www.redbull.com/int-en/discover", "description": "Sports extrêmes et événements" },
+
+    { "groupe": "Religion & enfants", "nom": "KTO", "lien": "https://www.ktotv.com/", "description": "Télévision catholique · messes en direct" },
+    { "groupe": "Religion & enfants", "nom": "Gulli", "lien": "https://www.gulli.fr/", "description": "Dessins animés" }
+  ]
+}
