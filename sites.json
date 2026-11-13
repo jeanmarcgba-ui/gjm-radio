@@ -1,28 +1,198 @@
 {
   "aide": "Onglet « Sites TV » : chaque bouton ouvre le site officiel d'une chaîne qui diffuse son direct gratuitement. nom = nom affiché, lien = adresse https du site, groupe = rubrique, description = petite phrase, logo = lien d'une image (facultatif). actif false = site mis de côté. Mettez uniquement des sites officiels.",
   "sites": [
-    { "groupe": "Côte d'Ivoire & Afrique", "nom": "RTI Play", "lien": "https://rtiplay.ci/", "description": "RTI 1, RTI 2, La 3 en direct et en replay" },
-    { "groupe": "Côte d'Ivoire & Afrique", "nom": "NCI", "lien": "https://www.nci.ci/", "description": "Le direct de NCI" },
-    { "groupe": "Côte d'Ivoire & Afrique", "nom": "Africanews", "lien": "https://fr.africanews.com/", "description": "Infos Afrique en continu" },
-    { "groupe": "Côte d'Ivoire & Afrique", "nom": "RTS Sénégal", "lien": "https://www.rts.sn/", "description": "Télévision publique sénégalaise" },
-    { "groupe": "Côte d'Ivoire & Afrique", "nom": "CRTV Cameroun", "lien": "https://www.crtv.cm/", "description": "Télévision publique camerounaise" },
-
-    { "groupe": "Infos internationales", "nom": "France 24", "lien": "https://www.france24.com/fr/direct", "description": "Infos en français 24h/24" },
-    { "groupe": "Infos internationales", "nom": "TV5Monde", "lien": "https://www.tv5monde.com/", "description": "La chaîne francophone internationale" },
-    { "groupe": "Infos internationales", "nom": "Euronews", "lien": "https://fr.euronews.com/live", "description": "Infos en français en direct" },
-    { "groupe": "Infos internationales", "nom": "RFI", "lien": "https://www.rfi.fr/fr/", "description": "Radio France Internationale · infos Afrique" },
-
-    { "groupe": "France (parfois bloqué hors de France)", "nom": "france.tv", "lien": "https://www.france.tv/", "description": "France 2, France 3, France 4, France 5" },
-    { "groupe": "France (parfois bloqué hors de France)", "nom": "TF1+", "lien": "https://www.tf1.fr/", "description": "TF1, TMC, LCI… (compte gratuit)" },
-    { "groupe": "France (parfois bloqué hors de France)", "nom": "M6+", "lien": "https://www.m6.fr/", "description": "M6, W9, Gulli… (compte gratuit)" },
-    { "groupe": "France (parfois bloqué hors de France)", "nom": "BFM TV", "lien": "https://www.bfmtv.com/en-direct/", "description": "Infos en continu" },
-
-    { "groupe": "Sport", "nom": "FIFA+", "lien": "https://www.plus.fifa.com/", "description": "Matchs et compétitions diffusés par la FIFA" },
-    { "groupe": "Sport", "nom": "CAF TV", "lien": "https://www.youtube.com/user/MyAfricanFootball", "description": "Chaîne YouTube officielle du football africain" },
-    { "groupe": "Sport", "nom": "Olympics", "lien": "https://www.olympics.com/fr/", "description": "Sports olympiques" },
-    { "groupe": "Sport", "nom": "Red Bull TV", "lien": "https://www.redbull.com/int-en/discover", "description": "Sports extrêmes et événements" },
-
-    { "groupe": "Religion & enfants", "nom": "KTO", "lien": "https://www.ktotv.com/", "description": "Télévision catholique · messes en direct" },
-    { "groupe": "Religion & enfants", "nom": "Gulli", "lien": "https://www.gulli.fr/", "description": "Dessins animés" }
+    {
+      "groupe": "Côte d'Ivoire & Afrique",
+      "nom": "RTI Play",
+      "lien": "https://rtiplay.ci/",
+      "description": "RTI 1, RTI 2, La 3 en direct et en replay"
+    },
+    {
+      "groupe": "Côte d'Ivoire & Afrique",
+      "nom": "NCI",
+      "lien": "https://www.nci.ci/",
+      "description": "Le direct de NCI"
+    },
+    {
+      "groupe": "Côte d'Ivoire & Afrique",
+      "nom": "Africanews",
+      "lien": "https://fr.africanews.com/",
+      "description": "Infos Afrique en continu"
+    },
+    {
+      "groupe": "Côte d'Ivoire & Afrique",
+      "nom": "RTS Sénégal",
+      "lien": "https://www.rts.sn/",
+      "description": "Télévision publique sénégalaise"
+    },
+    {
+      "groupe": "Côte d'Ivoire & Afrique",
+      "nom": "CRTV Cameroun",
+      "lien": "https://www.crtv.cm/",
+      "description": "Télévision publique camerounaise"
+    },
+    {
+      "groupe": "Infos internationales",
+      "nom": "France 24",
+      "lien": "https://www.france24.com/fr/direct",
+      "description": "Infos en français 24h/24"
+    },
+    {
+      "groupe": "Infos internationales",
+      "nom": "TV5Monde",
+      "lien": "https://www.tv5monde.com/",
+      "description": "La chaîne francophone internationale"
+    },
+    {
+      "groupe": "Infos internationales",
+      "nom": "Euronews",
+      "lien": "https://fr.euronews.com/live",
+      "description": "Infos en français en direct"
+    },
+    {
+      "groupe": "Infos internationales",
+      "nom": "RFI",
+      "lien": "https://www.rfi.fr/fr/",
+      "description": "Radio France Internationale · infos Afrique"
+    },
+    {
+      "groupe": "France (parfois bloqué hors de France)",
+      "nom": "france.tv",
+      "lien": "https://www.france.tv/",
+      "description": "France 2, France 3, France 4, France 5"
+    },
+    {
+      "groupe": "France (parfois bloqué hors de France)",
+      "nom": "TF1+",
+      "lien": "https://www.tf1.fr/",
+      "description": "TF1, TMC, LCI… (compte gratuit)"
+    },
+    {
+      "groupe": "France (parfois bloqué hors de France)",
+      "nom": "M6+",
+      "lien": "https://www.m6.fr/",
+      "description": "M6, W9, Gulli… (compte gratuit)"
+    },
+    {
+      "groupe": "France (parfois bloqué hors de France)",
+      "nom": "BFM TV",
+      "lien": "https://www.bfmtv.com/en-direct/",
+      "description": "Infos en continu"
+    },
+    {
+      "groupe": "Sport",
+      "nom": "FIFA+",
+      "lien": "https://www.plus.fifa.com/",
+      "description": "Matchs et compétitions diffusés par la FIFA"
+    },
+    {
+      "groupe": "Sport",
+      "nom": "CAF TV",
+      "lien": "https://www.youtube.com/user/MyAfricanFootball",
+      "description": "Chaîne YouTube officielle du football africain"
+    },
+    {
+      "groupe": "Sport",
+      "nom": "Olympics",
+      "lien": "https://www.olympics.com/fr/",
+      "description": "Sports olympiques"
+    },
+    {
+      "groupe": "Sport",
+      "nom": "Red Bull TV",
+      "lien": "https://www.redbull.com/int-en/discover",
+      "description": "Sports extrêmes et événements"
+    },
+    {
+      "groupe": "Religion & enfants",
+      "nom": "KTO",
+      "lien": "https://www.ktotv.com/",
+      "description": "Télévision catholique · messes en direct"
+    },
+    {
+      "groupe": "Religion & enfants",
+      "nom": "Gulli",
+      "lien": "https://www.gulli.fr/",
+      "description": "Dessins animés"
+    },
+    {
+      "groupe": "Films & séries",
+      "nom": "TV5MONDEplus",
+      "lien": "https://www.tv5mondeplus.com/",
+      "description": "Films et séries francophones, beaucoup de films africains · gratuit"
+    },
+    {
+      "groupe": "Films & séries",
+      "nom": "Pluto TV",
+      "lien": "https://pluto.tv/fr",
+      "description": "Chaînes de films et séries en continu · gratuit avec pub (pas disponible partout)"
+    },
+    {
+      "groupe": "Films & séries",
+      "nom": "Plex",
+      "lien": "https://watch.plex.tv/",
+      "description": "Des milliers de films et séries · gratuit avec pub"
+    },
+    {
+      "groupe": "Films & séries",
+      "nom": "arte.tv",
+      "lien": "https://www.arte.tv/fr/",
+      "description": "Films, séries et documentaires · certains bloqués hors d'Europe"
+    },
+    {
+      "groupe": "Films & séries",
+      "nom": "Internet Archive · Films",
+      "lien": "https://archive.org/details/feature_films",
+      "description": "Vieux films libres de droits · gratuit"
+    },
+    {
+      "groupe": "Nollywood (YouTube officiel)",
+      "nom": "FAAN TV",
+      "lien": "https://www.youtube.com/results?search_query=%22FAAN+TV%22&sp=EgIQAg%253D%253D",
+      "description": "Chaîne officielle de Funke Akindele · films gratuits",
+      "logo": "https://www.google.com/s2/favicons?sz=128&domain=youtube.com"
+    },
+    {
+      "groupe": "Nollywood (YouTube officiel)",
+      "nom": "Ruth Kadiri 247",
+      "lien": "https://www.youtube.com/results?search_query=%22Ruth+Kadiri+247%22&sp=EgIQAg%253D%253D",
+      "description": "Chaîne officielle de Ruth Kadiri · films gratuits",
+      "logo": "https://www.google.com/s2/favicons?sz=128&domain=youtube.com"
+    },
+    {
+      "groupe": "Nollywood (YouTube officiel)",
+      "nom": "Omoni Oboli TV",
+      "lien": "https://www.youtube.com/results?search_query=%22Omoni+Oboli+TV%22&sp=EgIQAg%253D%253D",
+      "description": "Chaîne officielle de Omoni Oboli · films gratuits",
+      "logo": "https://www.google.com/s2/favicons?sz=128&domain=youtube.com"
+    },
+    {
+      "groupe": "Nollywood (YouTube officiel)",
+      "nom": "Omoni Oboli French TV",
+      "lien": "https://www.youtube.com/results?search_query=%22Omoni+Oboli+French+TV%22&sp=EgIQAg%253D%253D",
+      "description": "Chaîne officielle de Omoni Oboli, en français · films gratuits",
+      "logo": "https://www.google.com/s2/favicons?sz=128&domain=youtube.com"
+    },
+    {
+      "groupe": "Nollywood (YouTube officiel)",
+      "nom": "Uchenna Mbunabo TV",
+      "lien": "https://www.youtube.com/results?search_query=%22Uchenna+Mbunabo+TV%22&sp=EgIQAg%253D%253D",
+      "description": "Chaîne officielle de Uchenna Mbunabo · films gratuits",
+      "logo": "https://www.google.com/s2/favicons?sz=128&domain=youtube.com"
+    },
+    {
+      "groupe": "Nollywood (YouTube officiel)",
+      "nom": "Bimbo Ademoye TV",
+      "lien": "https://www.youtube.com/results?search_query=%22Bimbo+Ademoye+TV%22&sp=EgIQAg%253D%253D",
+      "description": "Chaîne officielle de Bimbo Ademoye · films gratuits",
+      "logo": "https://www.google.com/s2/favicons?sz=128&domain=youtube.com"
+    },
+    {
+      "groupe": "Nollywood (YouTube officiel)",
+      "nom": "Uduak Isong TV",
+      "lien": "https://www.youtube.com/results?search_query=%22Uduak+Isong+TV%22&sp=EgIQAg%253D%253D",
+      "description": "Chaîne officielle de Uduak Isong · films gratuits",
+      "logo": "https://www.google.com/s2/favicons?sz=128&domain=youtube.com"
+    }
   ]
 }
